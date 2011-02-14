@@ -1,0 +1,23 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+	<f:entry title="Clang Static Analyzer Installation">
+		<select class="setting-input" name="clangInstallationName">
+		    <j:forEach var="installation" items="${descriptor.installations}">
+		   		<f:option value="${installation.name}" selected="${installation.name==instance.clangInstallationName}">${installation.name}</f:option>
+        	</j:forEach>
+    	</select>
+    </f:entry>
+    
+  	<f:entry title="Target" field="target">
+    		<f:textbox />
+  	</f:entry>
+
+  	<f:entry title="Build Configuration" field="config">
+    		<f:textbox default="Debug"/>
+  	</f:entry>
+  	
+    <f:entry title="Target SDK" field="targetSdk">
+    		<f:textbox />
+  	</f:entry>
+
+</j:jelly>
