@@ -31,18 +31,21 @@ public class ClangScanBuildBuilder extends Builder{
     private String targetSdk;
     private String config;
     private String clangInstallationName;
+    private String clangScanBuildOutputFolder;
 
     @DataBoundConstructor
     public ClangScanBuildBuilder( 
     		String target, 
     		String targetSdk, 
     		String config, 
-    		String clangInstallationName ){
+    		String clangInstallationName,
+    		String clangScanBuildOutputFolder ){
     	
         this.target = Util.fixEmptyAndTrim( target );
         this.targetSdk = Util.fixEmptyAndTrim( targetSdk );
         this.config = Util.fixEmptyAndTrim( config );     
         this.clangInstallationName = Util.fixEmptyAndTrim( clangInstallationName );
+        this.clangScanBuildOutputFolder = Util.fixEmptyAndTrim( clangScanBuildOutputFolder );
     }
 
     public String getClangInstallationName(){
@@ -60,13 +63,17 @@ public class ClangScanBuildBuilder extends Builder{
 	public String getConfig() {
 		return config;
 	}
+	
+	public String getClangScanBuildOutputFolder(){
+		return clangScanBuildOutputFolder;
+	}
 
 	/**
 	 * This method is invoked when a job is actually executed.  It is the magic method.
 	 * @return boolean - if 'false', build will be aborted
 	 */
 	@Override
-    public boolean perform( AbstractBuild build, Launcher launcher, BuildListener listener ) {
+    public boolean perform( @SuppressWarnings("rawtypes") AbstractBuild build, Launcher launcher, BuildListener listener ) {
 		
 		ClangScanBuildToolInstallation clangInstallation = DESCRIPTOR.getNamedInstallation( getClangInstallationName() );
 		if( clangInstallation == null ){
@@ -81,7 +88,7 @@ public class ClangScanBuildBuilder extends Builder{
 		xcodebuild.setTarget( getTarget() );
 		xcodebuild.setTargetSdk( getTargetSdk() );
 		xcodebuild.setConfig( getConfig() );
-		xcodebuild.setClangOutputFolderPath( "clang-output" );
+		xcodebuild.setClangOutputFolderPath( getClangScanBuildOutputFolder() );
 		
 		try {
 			String path = clangInstallation.getExecutable( launcher ) ;

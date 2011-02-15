@@ -2,6 +2,7 @@ package jenkins.plugins.clangscanbuild;
 
 import hudson.CopyOnWrite;
 import hudson.model.AbstractProject;
+import hudson.model.FreeStyleProject;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.tools.ToolInstallation;
@@ -80,12 +81,6 @@ public class ClangScanBuildDescriptor extends BuildStepDescriptor<Builder>{
         if( value.length() == 0 ) return FormValidation.warning( "If no build configuration is provided, the project's 'active' build configuration will be used automatically." );
         return FormValidation.ok();
     }
-	
-    // BUILD ACTION
-    public FormValidation doCheckBuildAction( @QueryParameter String value ) throws IOException, ServletException {
-        if( value.length() == 0 ) return FormValidation.error( "If no build configuration is provided, the project's 'active' build configuration will be used automatically." );
-        return FormValidation.ok();
-    }
 
     public String getDisplayName() {
         return "Clang Scan-Build";
@@ -112,8 +107,8 @@ public class ClangScanBuildDescriptor extends BuildStepDescriptor<Builder>{
         return super.configure( req, formData );
     }
 
-    public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-        return true;
+    public boolean isApplicable( @SuppressWarnings("rawtypes") Class<? extends AbstractProject> jobType ){
+        return FreeStyleProject.class.isAssignableFrom( jobType );
     }
     
 }

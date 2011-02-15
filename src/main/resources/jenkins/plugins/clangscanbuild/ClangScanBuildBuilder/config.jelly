@@ -19,5 +19,9 @@
     <f:entry title="Target SDK" field="targetSdk">
     		<f:textbox />
   	</f:entry>
-
+  	
+  	<f:entry title="Report output folder" field="clangScanBuildOutputFolder">
+    		<f:textbox default="clang-output" />
+  	</f:entry>
+  	
 </j:jelly>
