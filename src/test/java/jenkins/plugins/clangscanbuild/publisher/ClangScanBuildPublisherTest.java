@@ -11,7 +11,7 @@ public class ClangScanBuildPublisherTest extends HudsonTestCase{
 	@Test
 	public void test() throws Exception{
 		
-		ClangScanBuildPublisher publisher = new ClangScanBuildPublisher( "clang-output", 0, true );
+		ClangScanBuildPublisher publisher = new ClangScanBuildPublisher( "clang-output", true, 0 );
 		FreeStyleProject project = createFreeStyleProject();
 		
 		project.getPublishersList().add( publisher );
