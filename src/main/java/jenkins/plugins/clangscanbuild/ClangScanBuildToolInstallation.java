@@ -4,10 +4,9 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.model.BuildListener;
+import hudson.model.TaskListener;
 import hudson.model.Hudson;
 import hudson.model.Node;
-import hudson.model.TaskListener;
 import hudson.remoting.Callable;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolProperty;
@@ -31,9 +30,9 @@ public class ClangScanBuildToolInstallation extends ToolInstallation{
     		String home,
     		List<? extends ToolProperty<?>> properties ){
 		
-		super(  Util.fixEmptyAndTrim( name ), 
-				removeTrailingSlashes( Util.fixEmptyAndTrim( home ) ),
-				properties );
+		super( Util.fixEmptyAndTrim( name ), 
+			   removeTrailingSlashes( Util.fixEmptyAndTrim( home ) ),
+			   properties );
     }
 
     private static String removeTrailingSlashes( String home ) {
@@ -92,11 +91,6 @@ public class ClangScanBuildToolInstallation extends ToolInstallation{
         	return Hudson.getInstance().getDescriptorByType( ClangScanBuildDescriptor.class );
         }
 
-//        @Override
-//        public List<? extends ToolInstaller> getDefaultInstallers() {
-//            return Collections.singletonList(new ScanBuildInstallation(null));
-//        }
-
         /**
          * Checks if the clang directory is valid.
          */
@@ -111,7 +105,7 @@ public class ClangScanBuildToolInstallation extends ToolInstallation{
             if( !value.isDirectory() ) return FormValidation.error( "Please enter the path to the folder which contains the Clang static analyzer." );
 
             File scanBuild = new File( value, "scan-build" );
-            if( !scanBuild.exists() ) return FormValidation.error( "Unable to locate 'scan-build' in the provided home directory." );
+            if( !scanBuild.exists() ) return FormValidation.warning( "Unable to locate 'scan-build' in the provided home directory." );
 
             return FormValidation.ok();
         }

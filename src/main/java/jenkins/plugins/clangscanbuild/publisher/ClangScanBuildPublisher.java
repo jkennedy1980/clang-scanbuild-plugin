@@ -41,19 +41,18 @@ public class ClangScanBuildPublisher extends Recorder{
 
 	private String scanBuildOutputFolder;
 	private int bugThreshold;
-	private boolean failWhenThresholdExceeded;
-	
-	@DataBoundConstructor
+	private boolean markBuildUnstableWhenThresholdIsExceeded;
+
 	public ClangScanBuildPublisher( 
 			String scanBuildOutputFolder,
-			int bugThreshold,
-			boolean failWhenThresholdExceeded){
+			boolean markBuildUnstableWhenThresholdIsExceeded, 
+			int bugThreshold
+			){
 		
 		super();
-		System.err.println("STARTING RECORDER");
 		this.scanBuildOutputFolder = scanBuildOutputFolder;
+		this.markBuildUnstableWhenThresholdIsExceeded = markBuildUnstableWhenThresholdIsExceeded;
 		this.bugThreshold = bugThreshold;
-		this.failWhenThresholdExceeded = failWhenThresholdExceeded;
 	}
 	
 	public String getScanBuildOutputFolder() {
@@ -67,19 +66,15 @@ public class ClangScanBuildPublisher extends Recorder{
 	public int getBugThreshold() {
 		return bugThreshold;
 	}
+	
+	public boolean isMarkBuildUnstableWhenThresholdIsExceeded(){
+		return markBuildUnstableWhenThresholdIsExceeded;
+	}
 
 	public void setBugThreshold(int bugThreshold) {
 		this.bugThreshold = bugThreshold;
 	}
 
-	public boolean isFailWhenThresholdExceeded() {
-		return failWhenThresholdExceeded;
-	}
-
-	public void setFailWhenThresholdExceeded(boolean failWhenThresholdExceeded) {
-		this.failWhenThresholdExceeded = failWhenThresholdExceeded;
-	}
-	
 	@Override
 	public Action getProjectAction( AbstractProject<?, ?> project ){
 		return new ClangScanBuildProjectAction( project );
@@ -96,8 +91,8 @@ public class ClangScanBuildPublisher extends Recorder{
 
 	@Override
 	public boolean perform( AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener ) throws InterruptedException, IOException {
-		// TODO: annotate the start of the publish phase
-		listener.getLogger().println( "STARTING CLANG PUBLISHER" );
+
+		listener.getLogger().println( "Publishing Clang scan-build results" );
 		
 		FilePath workspaceOutputFolder = ensureWorkspaceOutputFolder( build );
 			
@@ -105,31 +100,36 @@ public class ClangScanBuildPublisher extends Recorder{
 		
 		copyClangReportsToBuildArtifacts( workspaceOutputFolder, buildOutputFolder, listener );
 
-		FilePath[] clangReports = locateClangBugReports( workspaceOutputFolder );
+		List<FilePath> clangReports = locateClangBugReports( buildOutputFolder );
 
 		ClangScanBuildBugSummary previousBugSummary = getBugSummaryForLastBuild( build );
-		ClangScanBuildBugSummary bugSummary = new ClangScanBuildBugSummary( build.number );
+		ClangScanBuildBugSummary newBugSummary = new ClangScanBuildBugSummary( build.number );
 		
 		for( FilePath report : clangReports ){
-			ClangScanBuildBug bug = createBugFromClangScanBuildHtml( build.getProject().getName(), report, previousBugSummary );
-			bugSummary.add( bug );
+			ClangScanBuildBug bug = createBugFromClangScanBuildHtml( build.getProject().getName(), report, previousBugSummary, build.getWorkspace().getRemote() );
+			newBugSummary.add( bug );
 		}
+		
+		
+		FilePath bugSummaryXMLFile = new FilePath( buildOutputFolder, "bugSummary.xml" );
+		
+		String bugSummaryXML = AbstractBuild.XSTREAM.toXML( newBugSummary );
+		bugSummaryXMLFile.write( bugSummaryXML, "UTF-8" );
+		
 
-		final ClangScanBuildAction action = new ClangScanBuildAction( build, bugSummary );
+		final ClangScanBuildAction action = new ClangScanBuildAction( build, newBugSummary.getBugCount(), markBuildUnstableWhenThresholdIsExceeded, bugThreshold, scanBuildOutputFolder, bugSummaryXMLFile );
         build.getActions().add( action );
 
-        if( action.getResult().isFailed() ){
-        	listener.getLogger().println( "REPORT INDICATED A FAILURE" );
+        if( action.buildFailedDueToExceededThreshold() ){
+        	listener.getLogger().println( "Clang scan-build threshhold exceeded." );
             build.setResult( Result.UNSTABLE );
         }
-		
-		//evaluateBuildStatus( build, listener, reports );
-		
+
 		return true;
 	}
 	
-	private ClangScanBuildBug createBugFromClangScanBuildHtml( String projectName, FilePath report, ClangScanBuildBugSummary previousBugSummary ){
-		ClangScanBuildBug bug = createBugInstance( projectName, report );
+	private ClangScanBuildBug createBugFromClangScanBuildHtml( String projectName, FilePath report, ClangScanBuildBugSummary previousBugSummary, String workspacePath ){
+		ClangScanBuildBug bug = createBugInstance( projectName, report, workspacePath );
 		if( previousBugSummary != null ){
 			// This marks bugs as new if they did not exist in the last build report
 			bug.setNewBug( !previousBugSummary.contains( bug ) );
@@ -137,23 +137,20 @@ public class ClangScanBuildPublisher extends Recorder{
 		return bug;
 	}
 
-	private FilePath ensureWorkspaceOutputFolder(AbstractBuild<?, ?> build)
-			throws IOException, InterruptedException {
+	private FilePath ensureWorkspaceOutputFolder(AbstractBuild<?, ?> build) throws IOException, InterruptedException {
 		FilePath workspaceOutputFolder = new FilePath( build.getWorkspace(), getScanBuildOutputFolder() );
 		if( !workspaceOutputFolder.exists() ) workspaceOutputFolder.mkdirs();
 		return workspaceOutputFolder;
 	}
 
-	private ClangScanBuildBugSummary getBugSummaryForLastBuild(
-			AbstractBuild<?, ?> build) {
-		ClangScanBuildBugSummary previousBugSummary = null;
+	private ClangScanBuildBugSummary getBugSummaryForLastBuild( AbstractBuild<?, ?> build) {
 		if( build.getPreviousBuild() != null ){
 			ClangScanBuildAction previousAction = build.getPreviousBuild().getAction( ClangScanBuildAction.class );
 			if( previousAction != null ){
-				previousBugSummary = previousAction.getBugSummary();
+				return previousAction.loadBugSummary();
 			}
 		}
-		return previousBugSummary;
+		return null;
 	}
 
 	/**
@@ -176,7 +173,7 @@ public class ClangScanBuildPublisher extends Recorder{
 		}
 	}
 
-	private ClangScanBuildBug createBugInstance( String projectName, FilePath report ){
+	private ClangScanBuildBug createBugInstance( String projectName, FilePath report, String workspacePath ){
 		ClangScanBuildBug instance = new ClangScanBuildBug();
 		instance.setReportFile( report.getName() );
 		
@@ -187,36 +184,22 @@ public class ClangScanBuildPublisher extends Recorder{
 			instance.setBugType( getMatch( BUG_TYPE_PATTERN, contents ) );
 			instance.setBugCategory( getMatch( BUGCATEGORY_PATTERN, contents ) );
 			String sourceFile = getMatch( BUGFILE_PATTERN, contents );
-			// TODO: slashes make this not cross platform...fix it
-			String search = "/jobs/" + projectName + "/workspace/";
 
-			int position = sourceFile.lastIndexOf( search );
-			if( position > 0 ){
-				sourceFile = sourceFile.substring( position + search.length() );
+			// This attempts to shorten the file path by removing the workspace path and
+			// leaving only the path relative to the workspace.
+			int position = sourceFile.lastIndexOf( workspacePath );
+			if( position >= 0 ){
+				sourceFile = sourceFile.substring( position + workspacePath.length() );
 			}
 			
 			instance.setSourceFile( sourceFile );
 		}catch( IOException e ){
-			LOGGER.log( Level.INFO, "Unable to read file or locate clang markers in content: " + report );
+			LOGGER.log( Level.ALL, "Unable to read file or locate clang markers in content: " + report );
 		}
 
 		return instance;
 	}
 
-	private void evaluateBuildStatus( AbstractBuild<?, ?> build, BuildListener listener, FilePath[] reports ){
-		if( isFailWhenThresholdExceeded() ){
-			if( reports.length > getBugThreshold() ){
-				listener.getLogger().println( "Marking build as failed due to the clang bug threshold being exceeded by " + ( reports.length - getBugThreshold() ) );
-				build.setResult( Result.FAILURE );
-			}
-		}else{
-			if( reports.length > getBugThreshold() ){
-				listener.getLogger().println( "Marking build as unstable due to the clang bug threshold being exceeded by " + ( reports.length - getBugThreshold() ) );
-				build.setResult( Result.UNSTABLE );
-			}
-		}
-	}
-	
 	private String getMatch( Pattern pattern, String contents ){
 		Matcher matcher = pattern.matcher( contents );
 		while( matcher.find() ){
@@ -225,10 +208,10 @@ public class ClangScanBuildPublisher extends Recorder{
 		return null;
 	}
 	
-	protected static FilePath[] locateClangBugReports( FilePath clangOutputFolder ) throws IOException, InterruptedException {
+	protected List<FilePath> locateClangBugReports( FilePath clangOutputFolder ) throws IOException, InterruptedException {
         List<FilePath> files = new ArrayList<FilePath>();
         files.addAll( Arrays.asList( clangOutputFolder.list( "**/report-*.html" ) ) );
-        return files.toArray( new FilePath[ files.size() ] );
+        return files;
 	}
 	
 }

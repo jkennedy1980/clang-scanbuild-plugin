@@ -1,10 +1,13 @@
 package jenkins.plugins.clangscanbuild.actions;
 
-import hudson.model.HealthReport;
-import hudson.model.HealthReportingAction;
+import java.io.IOException;
+
+import hudson.FilePath;
+import hudson.model.Action;
+import hudson.model.ModelObject;
 import hudson.model.AbstractBuild;
+import jenkins.plugins.clangscanbuild.ClangScanBuildUtils;
 import jenkins.plugins.clangscanbuild.history.ClangScanBuildBugSummary;
-import jenkins.plugins.clangscanbuild.reports.ClangScanBuildReport;
 
 import org.kohsuke.stapler.StaplerProxy;
 
@@ -15,25 +18,57 @@ import org.kohsuke.stapler.StaplerProxy;
  * 
  * @author Josh Kennedy
  */
-public class ClangScanBuildAction implements HealthReportingAction, StaplerProxy{
+public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 
-	//private static final Logger logger = Logger.getLogger( ClangScanBuildAction.class.getName() );
-	public final AbstractBuild<?,?> build;
+	private int bugThreshold;
+	private String reportsUrl;
+	private FilePath bugSummaryXML;
+	private boolean markBuildUnstable;
+	private int bugCount;
 	
-	public ClangScanBuildReport report;
-	public ClangScanBuildBugSummary bugSummary;
-	
-	public ClangScanBuildAction( AbstractBuild<?,?> build, ClangScanBuildBugSummary bugSummary ){
-		this.build = build;
-		this.bugSummary = bugSummary;
+	public ClangScanBuildAction( AbstractBuild<?,?> build, int bugCount, boolean markBuildUnstable, int bugThreshold, String artifactsSubFolderName, FilePath bugSummaryXML ){
+		this.bugThreshold = bugThreshold;
+		this.bugCount = bugCount;
+		this.bugSummaryXML = bugSummaryXML;
+		this.markBuildUnstable = markBuildUnstable;
+		this.reportsUrl = "/" + build.getUrl() + "artifact/" + artifactsSubFolderName;
 	}
 	
-	public ClangScanBuildBugSummary getBugSummary(){
-		return bugSummary;
+	public boolean buildFailedDueToExceededThreshold(){
+		if( !markBuildUnstable ) return false;
+		return getBugCount() > bugThreshold;
+	}
+	
+	public int getBugThreshhold(){
+		return bugThreshold;
+	}
+	
+	/**
+	 * The only thing stored in the actual builds in the bugCount and bugThreshold.  This was done in order to make the
+	 * build XML smaller to reduce load times.  The counts are need in order to render the trend charts.
+	 * 
+	 * This method actually loads the XML file that was generated at build time and placed alongside the clang output files
+	 * This XML contains the list of bugs and is used to render the report which links to the clang files.
+	 * 
+	 * DON'T CALL THIS UNLESS YOU NEED THE ACTUAL BUG SUMMARY
+	 */
+	public ClangScanBuildBugSummary loadBugSummary(){
+		if( bugSummaryXML == null ) return null;
+		
+		try{
+			return (ClangScanBuildBugSummary) AbstractBuild.XSTREAM.fromXML( bugSummaryXML.read() );
+		}catch( IOException ioe ){
+			System.err.println( ioe );
+			return null;
+		}
 	}
 	
 	public int getBugCount(){
-		return bugSummary.getBugCount();
+		return bugCount;
+	}
+	
+	public String getReportsUrl(){
+		return this.reportsUrl;
 	}
 	
 	/**
@@ -41,7 +76,7 @@ public class ClangScanBuildAction implements HealthReportingAction, StaplerProxy
 	 */
 	@Override
 	public String getIconFileName() {
-		return "graph.gif";
+		return ClangScanBuildUtils.getIconsPath() + "scanbuild-32x32.png";
 	}
 
 	/**
@@ -49,7 +84,7 @@ public class ClangScanBuildAction implements HealthReportingAction, StaplerProxy
 	 */
 	@Override
 	public String getDisplayName() {
-		return "Clang Bug Report";
+		return "Clang scan-build bugs";
 	}
 
 	/**
@@ -58,7 +93,7 @@ public class ClangScanBuildAction implements HealthReportingAction, StaplerProxy
 	 */
 	@Override
 	public String getUrlName() {
-		return "clangBugBuildReport";
+		return "clangScanBuildBugs";
 	}
 
 	/**
@@ -69,26 +104,7 @@ public class ClangScanBuildAction implements HealthReportingAction, StaplerProxy
 	 */
 	@Override
 	public Object getTarget(){
-		return getResult();
+		return this;
 	}
-	
-	public synchronized ClangScanBuildReport getResult() {
-        ClangScanBuildAction action = build.getAction( ClangScanBuildAction.class );
-		
-		report = new ClangScanBuildReport( action.getBugSummary(), build );
-        return report;
-    }
-
-	/**
-	 * Called after build to determine build score.  Lowest build score wins.
-	 */
-	@Override
-	public HealthReport getBuildHealth(){
-		System.err.println( "INSIDE CLANG SCAN BUILD ACTION - getBuildHealth" );
-		HealthReport report = new HealthReport();
-		report.setDescription( "FAILED DUE TO CLANG ERRORS" );
-		report.setScore( 20 );
-		return report;
-	}
-
+    
 }

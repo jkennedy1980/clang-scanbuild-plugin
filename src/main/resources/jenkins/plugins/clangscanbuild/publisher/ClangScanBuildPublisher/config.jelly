@@ -1,15 +1,19 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
-  	<f:entry title="Clang Scan-Build output folder" field="scanBuildOutputFolder">
-    		<f:textbox />
-  	</f:entry>
-  	
-    <f:entry title="Clang Bug Threshold" field="bugThreshold">
-    		<f:textbox />
-  	</f:entry>
-  	
-    <f:entry title="Fail build when threshold is exceeded?" field="failWhenThresholdExceeded">
-    		<f:checkbox />
-  	</f:entry>
+	<f:entry title="Report output folder" field="scanBuildOutputFolder">
+		<f:textbox />
+	</f:entry>
+
+   <f:nested>
+     <table>
+	  	<f:optionalBlock name="failWhenThresholdExceeded" title="Mark build as unstable when threshold is exceeded?" checked="${instance.markBuildUnstableWhenThresholdIsExceeded}">
+	      
+		    <f:entry title="Clang bug threshold" field="bugThreshold">
+		    		<f:textbox />
+		  	</f:entry>
+	      
+	    </f:optionalBlock>
+	  </table>
+   </f:nested>
   	
 </j:jelly>

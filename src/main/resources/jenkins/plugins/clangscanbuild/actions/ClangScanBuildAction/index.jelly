@@ -1,0 +1,44 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+	
+	<j:set var="bugSummary" value="${it.loadBugSummary()}"/>
+	
+	<l:layout title="Clang Scan-Build">
+
+    <l:main-panel>
+    	<h2>Clang scan-build bug report for build #${bugSummary.buildNumber}</h2>
+	
+		<table border="1px" class="sortable pane">
+	      <tr>
+	      	<td>File</td>
+	        <td>Bug Type</td>
+	        <td>Category</td>
+	        <td>Description</td>
+	        <td></td>	      
+	      </tr>
+	    
+	    <j:forEach var="bug" items="${bugSummary.bugs}">
+	      <tr style="${h.ifThenElse( bug.newBug,'background-color: #FCDEDE;','')}">
+	        <td>
+	          <st:out value="${bug.sourceFile}"/>
+	        </td>
+	        <td>
+	          <st:out value="${bug.bugType}"/>
+	        </td>
+	        <td>
+	          <st:out value="${bug.bugCategory}"/>
+	        </td>
+	        <td>
+	          <st:out value="${bug.bugDescription}"/>
+	        </td>
+	        <td>
+	        	<a target="_blank" href="${it.reportsUrl}/${bug.reportFile}">Details</a>
+	        </td>	      
+	      </tr>
+	    </j:forEach>
+	  </table>
+
+    </l:main-panel>
+	
+  	</l:layout>
+  	
+</j:jelly>
