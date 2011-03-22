@@ -31,7 +31,7 @@ public class ScanBuildCommand implements Command{
 		args.add( "-v" ); // verbose
 		args.add( "-v" ); // even more verbose
 		args.add( "-o" ); // output folder
-		args.add( "" + outputPath.toString().replaceAll( " ", "/ " ) + "" );
+		args.add( "" + outputPath.getRemote().replaceAll( " ", "/ " ) + "" );
 		
 		args.add( "xcodebuild" );
 		

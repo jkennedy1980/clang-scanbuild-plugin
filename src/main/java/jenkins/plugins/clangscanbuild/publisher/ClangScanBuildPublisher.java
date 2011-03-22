@@ -25,8 +25,6 @@ import jenkins.plugins.clangscanbuild.actions.ClangScanBuildProjectAction;
 import jenkins.plugins.clangscanbuild.history.ClangScanBuildBug;
 import jenkins.plugins.clangscanbuild.history.ClangScanBuildBugSummary;
 
-import org.kohsuke.stapler.DataBoundConstructor;
-
 public class ClangScanBuildPublisher extends Recorder{
 	
 	private static final Logger LOGGER = Logger.getLogger( ClangScanBuildPublisher.class.getName() );
@@ -209,7 +207,8 @@ public class ClangScanBuildPublisher extends Recorder{
 	}
 	
 	protected List<FilePath> locateClangBugReports( FilePath clangOutputFolder ) throws IOException, InterruptedException {
-        List<FilePath> files = new ArrayList<FilePath>();
+		List<FilePath> files = new ArrayList<FilePath>();
+		if( !clangOutputFolder.exists() ) return files;
         files.addAll( Arrays.asList( clangOutputFolder.list( "**/report-*.html" ) ) );
         return files;
 	}
