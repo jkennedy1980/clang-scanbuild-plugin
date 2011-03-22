@@ -108,6 +108,9 @@ public class ClangScanBuildDescriptor extends BuildStepDescriptor<Builder>{
     }
 
     public boolean isApplicable( @SuppressWarnings("rawtypes") Class<? extends AbstractProject> jobType ){
+		if( !FreeStyleProject.class.isAssignableFrom( jobType ) ){
+			System.err.println( "Clang scan-build ERROR: Expected FreeStyleProject but was: " + jobType + " at Build Descriptor" );
+		}
         return FreeStyleProject.class.isAssignableFrom( jobType );
     }
     

@@ -8,7 +8,7 @@ import org.xml.sax.SAXException;
 
 public class PluginImpl extends Plugin{
 	
-	public static final String SHORTNAME = "clangscanbuild";
+	public static final String SHORTNAME = "clang-scanbuild-plugin";
 	
     @Override
     public void start() throws IOException, SAXException {
