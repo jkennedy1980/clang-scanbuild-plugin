@@ -92,32 +92,34 @@ public class ClangScanBuildPublisher extends Recorder{
 
 		listener.getLogger().println( "Publishing Clang scan-build results" );
 		
+// these lines copy the clang output to the build artifacts
 		FilePath workspaceOutputFolder = ensureWorkspaceOutputFolder( build );
-			
 		FilePath buildOutputFolder = new FilePath( new FilePath( build.getArtifactsDir() ), getScanBuildOutputFolder() );
-		
 		copyClangReportsToBuildArtifacts( workspaceOutputFolder, buildOutputFolder, listener );
 
+// this digs into the clang results looking for the subfolder created by clang
 		List<FilePath> clangReports = locateClangBugReports( buildOutputFolder );
 
+// this loads the previous bug summary for the last build.  it is need to identify bugs added since last build
 		ClangScanBuildBugSummary previousBugSummary = getBugSummaryForLastBuild( build );
+
+// this builds and new bug summary and populates it with bugs
 		ClangScanBuildBugSummary newBugSummary = new ClangScanBuildBugSummary( build.number );
-		
 		for( FilePath report : clangReports ){
 			ClangScanBuildBug bug = createBugFromClangScanBuildHtml( build.getProject().getName(), report, previousBugSummary, build.getWorkspace().getRemote() );
 			newBugSummary.add( bug );
 		}
 		
-		
+// this line dumps a bugSummary.xml file to the build artifacts.  did this instead of using job config xml for performance
 		FilePath bugSummaryXMLFile = new FilePath( buildOutputFolder, "bugSummary.xml" );
-		
 		String bugSummaryXML = AbstractBuild.XSTREAM.toXML( newBugSummary );
 		bugSummaryXMLFile.write( bugSummaryXML, "UTF-8" );
 		
-
+// this adds a build actions which records the bug count into the build results.  This count is used to generate the trend charts
 		final ClangScanBuildAction action = new ClangScanBuildAction( build, newBugSummary.getBugCount(), markBuildUnstableWhenThresholdIsExceeded, bugThreshold, scanBuildOutputFolder, bugSummaryXMLFile );
         build.getActions().add( action );
 
+// this checks if the build should be failed due to an increase in bugs
         if( action.buildFailedDueToExceededThreshold() ){
         	listener.getLogger().println( "Clang scan-build threshhold exceeded." );
             build.setResult( Result.UNSTABLE );
