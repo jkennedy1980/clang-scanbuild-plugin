@@ -48,4 +48,9 @@ public class BuildContextImpl implements BuildContext{
 		return procStarter;
 	}
 
+	@Override
+	public FilePath getBuildFolder() {
+		return new FilePath( build.getRootDir() );
+	}
+
 }

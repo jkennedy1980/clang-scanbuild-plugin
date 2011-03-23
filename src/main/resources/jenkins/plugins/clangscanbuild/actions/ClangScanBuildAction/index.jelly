@@ -31,7 +31,7 @@
 	          <st:out value="${bug.bugDescription}"/>
 	        </td>
 	        <td>
-	        	<a target="_blank" href="${it.reportsUrl}/${bug.reportFile}">Details</a>
+	        	<a target="_blank" href="browse/${bug.reportFile}">Details</a>
 	        </td>	      
 	      </tr>
 	    </j:forEach>

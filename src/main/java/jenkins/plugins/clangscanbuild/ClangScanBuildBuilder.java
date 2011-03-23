@@ -1,6 +1,7 @@
 package jenkins.plugins.clangscanbuild;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.BuildListener;
@@ -31,7 +32,7 @@ public class ClangScanBuildBuilder extends Builder{
     private String targetSdk;
     private String config;
     private String clangInstallationName;
-    private String clangScanBuildOutputFolder;
+    private String xcodeProjectSubPath;
 
     @DataBoundConstructor
     public ClangScanBuildBuilder( 
@@ -39,13 +40,13 @@ public class ClangScanBuildBuilder extends Builder{
     		String targetSdk, 
     		String config, 
     		String clangInstallationName,
-    		String clangScanBuildOutputFolder ){
+    		String xcodeProjectSubPath ){
     	
         this.target = Util.fixEmptyAndTrim( target );
         this.targetSdk = Util.fixEmptyAndTrim( targetSdk );
         this.config = Util.fixEmptyAndTrim( config );     
         this.clangInstallationName = Util.fixEmptyAndTrim( clangInstallationName );
-        this.clangScanBuildOutputFolder = Util.fixEmptyAndTrim( clangScanBuildOutputFolder );
+        this.xcodeProjectSubPath = Util.fixEmptyAndTrim( xcodeProjectSubPath );
     }
 
     public String getClangInstallationName(){
@@ -64,8 +65,15 @@ public class ClangScanBuildBuilder extends Builder{
 		return config;
 	}
 	
-	public String getClangScanBuildOutputFolder(){
-		return clangScanBuildOutputFolder;
+	/**
+	 * Removing slashes here in case the user adds a starting slash to the path.
+	 */
+	public String getXcodeProjectSubPath(){
+		if( xcodeProjectSubPath == null ) return null;
+		if( xcodeProjectSubPath.startsWith("/") || xcodeProjectSubPath.startsWith("\\") ){
+			return xcodeProjectSubPath.substring(1);
+		}
+		return xcodeProjectSubPath;
 	}
 
 	/**
@@ -84,11 +92,19 @@ public class ClangScanBuildBuilder extends Builder{
 		}
 		
 
+		FilePath reportOutputFolder = ClangScanBuildUtils.locateClangScanBuildReportFolder( build );
+
 		ScanBuildCommand xcodebuild = new ScanBuildCommand();
 		xcodebuild.setTarget( getTarget() );
 		xcodebuild.setTargetSdk( getTargetSdk() );
 		xcodebuild.setConfig( getConfig() );
-		xcodebuild.setClangOutputFolderPath( getClangScanBuildOutputFolder() );
+		xcodebuild.setClangOutputFolder( reportOutputFolder );
+		
+		if( getXcodeProjectSubPath() != null ){
+			xcodebuild.setProjectDirectory( new FilePath( build.getWorkspace(), getXcodeProjectSubPath() ) );
+		}else{
+			xcodebuild.setProjectDirectory( build.getWorkspace() );
+		}
 		
 		try {
 			String path = clangInstallation.getExecutable( launcher ) ;

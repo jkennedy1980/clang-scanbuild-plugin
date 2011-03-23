@@ -11,27 +11,26 @@ public class ScanBuildCommand implements Command{
     private String targetSdk;
     private String config = "Debug";
     private String clangScanBuildPath;
-    private String clangOutputFolderPath;
+    private FilePath clangOutputFolder;
+    private FilePath projectDirectory;
 	
 	public int execute( BuildContext context ) throws Exception {
 
-		FilePath outputPath = new FilePath( context.getWorkspace(), getClangOutputFolderPath() );
-		
-		if( outputPath.exists() ){
-			context.log( "Deleting " + getClangOutputFolderPath() + " contents from previous build." );
-			outputPath.deleteContents();
+		if( clangOutputFolder.exists() ){
+			// this should never happen because this folder is in the build directory - famous last words
+			context.log( "Deleting " + getClangOutputFolder().getRemote() + " contents from previous build." );
+			clangOutputFolder.deleteContents();
 		}else{
-			outputPath.mkdirs();
+			clangOutputFolder.mkdirs();
 		}
 
-		
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add( getClangScanBuildPath() );
 		args.add( "-k" ); // keep going on failure
 		args.add( "-v" ); // verbose
 		args.add( "-v" ); // even more verbose
 		args.add( "-o" ); // output folder
-		args.add( "" + outputPath.getRemote().replaceAll( " ", "/ " ) + "" );
+		args.add( "" + clangOutputFolder.getRemote().replaceAll( " ", "/ " ) + "" );
 		
 		args.add( "xcodebuild" );
 		
@@ -53,7 +52,8 @@ public class ScanBuildCommand implements Command{
 		
 		ProcStarter starter = context.getProcStarter();
 		starter.cmds( args );
-
+		starter.pwd( getProjectDirectory() );
+		
 		context.log( "COMMANDS:" + starter.cmds() );
 		
 		int rc = context.waitForProcess( starter );
@@ -105,12 +105,21 @@ public class ScanBuildCommand implements Command{
 		this.clangScanBuildPath = clangScanBuildPath;
 	}
 
-	public String getClangOutputFolderPath() {
-		return clangOutputFolderPath;
+	public FilePath getProjectDirectory() {
+		return projectDirectory;
 	}
 
-	public void setClangOutputFolderPath(String clangOutputFolderPath) {
-		this.clangOutputFolderPath = clangOutputFolderPath;
+	public void setProjectDirectory(FilePath projectDirectory) {
+		this.projectDirectory = projectDirectory;
 	}
+
+	public FilePath getClangOutputFolder() {
+		return clangOutputFolder;
+	}
+
+	public void setClangOutputFolder(FilePath clangOutputFolder) {
+		this.clangOutputFolder = clangOutputFolder;
+	}
+	
 
 }

@@ -29,7 +29,7 @@ public class ClangScanBuildPublisherDescriptor extends BuildStepDescriptor<Publi
 			bugThreshold = failWhenThresholdExceeded.getInt( "bugThreshold" );
 		}
 		
-		return new ClangScanBuildPublisher( json.getString( "scanBuildOutputFolder" ), markBuildUnstable, bugThreshold );
+		return new ClangScanBuildPublisher(  markBuildUnstable, bugThreshold );
 	}
 	
 	@Override

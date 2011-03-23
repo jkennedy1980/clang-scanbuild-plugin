@@ -1,15 +1,19 @@
 package jenkins.plugins.clangscanbuild.actions;
 
-import java.io.IOException;
-
 import hudson.FilePath;
 import hudson.model.Action;
 import hudson.model.ModelObject;
 import hudson.model.AbstractBuild;
+
+import java.io.IOException;
+import java.util.regex.Pattern;
+
 import jenkins.plugins.clangscanbuild.ClangScanBuildUtils;
 import jenkins.plugins.clangscanbuild.history.ClangScanBuildBugSummary;
 
 import org.kohsuke.stapler.StaplerProxy;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 /**
  * This contributes the menu to the left used to access reports/whatever from inside a 
@@ -21,17 +25,19 @@ import org.kohsuke.stapler.StaplerProxy;
 public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 
 	private int bugThreshold;
-	private String reportsUrl;
 	private FilePath bugSummaryXML;
 	private boolean markBuildUnstable;
 	private int bugCount;
+	private AbstractBuild<?,?> build;
 	
-	public ClangScanBuildAction( AbstractBuild<?,?> build, int bugCount, boolean markBuildUnstable, int bugThreshold, String artifactsSubFolderName, FilePath bugSummaryXML ){
+	private Pattern APPROVED_REPORT_REQUEST_PATTERN = Pattern.compile( "[^.\\\\/]*\\.html" );
+	
+	public ClangScanBuildAction( AbstractBuild<?,?> build, int bugCount, boolean markBuildUnstable, int bugThreshold, FilePath bugSummaryXML ){
 		this.bugThreshold = bugThreshold;
 		this.bugCount = bugCount;
 		this.bugSummaryXML = bugSummaryXML;
 		this.markBuildUnstable = markBuildUnstable;
-		this.reportsUrl = "/" + build.getUrl() + "artifact/" + artifactsSubFolderName;
+		this.build = build;
 	}
 	
 	public boolean buildFailedDueToExceededThreshold(){
@@ -65,10 +71,6 @@ public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 	
 	public int getBugCount(){
 		return bugCount;
-	}
-	
-	public String getReportsUrl(){
-		return this.reportsUrl;
 	}
 	
 	/**
@@ -106,5 +108,45 @@ public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 	public Object getTarget(){
 		return this;
 	}
+	
+	
+	
+	/**
+	 * This method is used to serve up report HTML files from the hidden build folder.  It essentially exposes
+	 * the reports to the web.
+	 */
+    public void doBrowse( StaplerRequest req, StaplerResponse rsp ) throws IOException {
+    	
+    	String requestedPath = trimFirstSlash( req.getRestOfPath() );
+    	if( requestedPath == null ) rsp.sendError( 404 );
+    
+    	if( !APPROVED_REPORT_REQUEST_PATTERN.matcher( requestedPath ).matches() ){
+    		System.err.println( "Someone is requesting unapproved content: " + requestedPath );
+    		rsp.sendError( 404 );
+    		return;
+    	}
+    	
+    	FilePath reports = ClangScanBuildUtils.locateClangScanBuildReportFolder( build );
+    	FilePath requestedFile = new FilePath( reports, trimFirstSlash( requestedPath ) );
+    	
+    	try{
+	    	if( !requestedFile.exists() ){
+	    		System.err.println( "Unable to locate report: " + req.getRestOfPath() );
+	    		rsp.sendError( 404 );
+	    		return;
+	    	}
+	    	rsp.serveFile( req, requestedFile.toURI().toURL() );
+    	}catch( Exception e ){
+    		System.err.println( "FAILED TO SERVE FILE: " + req.getRestOfPath() + " -> " + e.getLocalizedMessage() );
+    		rsp.sendError( 500 );
+    	}
+
+    }
+    
+    private String trimFirstSlash( String path ){
+    	if( path == null ) return null;
+    	if( !path.startsWith("/") ) return path.trim();
+    	return path.substring(1).trim();
+    }
     
 }

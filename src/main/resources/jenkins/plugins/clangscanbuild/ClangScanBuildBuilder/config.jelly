@@ -20,8 +20,8 @@
     		<f:textbox />
   	</f:entry>
   	
-  	<f:entry title="Report output folder" field="clangScanBuildOutputFolder">
-    		<f:textbox default="clang-output" />
+  	<f:entry title="XCode project sub-path" field="xcodeProjectSubPath">
+    		<f:textbox default="" />
   	</f:entry>
   	
 </j:jelly>

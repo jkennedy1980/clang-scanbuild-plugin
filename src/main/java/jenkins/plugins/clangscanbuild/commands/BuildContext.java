@@ -11,6 +11,12 @@ import hudson.Launcher.ProcStarter;
  * @author Josh Kenneyd
  */
 public interface BuildContext {
+	
+	/**
+	 * Returns the FilePath of the current executing build
+	 * @return
+	 */
+	public FilePath getBuildFolder();
 
 	/**
 	 * Returns workspace location of current executing build

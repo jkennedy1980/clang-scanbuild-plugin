@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jenkins.plugins.clangscanbuild.ClangScanBuildUtils;
 import jenkins.plugins.clangscanbuild.actions.ClangScanBuildAction;
 import jenkins.plugins.clangscanbuild.actions.ClangScanBuildProjectAction;
 import jenkins.plugins.clangscanbuild.history.ClangScanBuildBug;
@@ -37,28 +38,17 @@ public class ClangScanBuildPublisher extends Recorder{
 	private static final Pattern BUGFILE_PATTERN = Pattern.compile( "<!--\\sBUGFILE\\s(.*)\\s-->" );
 	private static final Pattern BUGCATEGORY_PATTERN = Pattern.compile( "<!--\\sBUGCATEGORY\\s(.*)\\s-->" );
 
-	private String scanBuildOutputFolder;
 	private int bugThreshold;
 	private boolean markBuildUnstableWhenThresholdIsExceeded;
 
 	public ClangScanBuildPublisher( 
-			String scanBuildOutputFolder,
 			boolean markBuildUnstableWhenThresholdIsExceeded, 
 			int bugThreshold
 			){
 		
 		super();
-		this.scanBuildOutputFolder = scanBuildOutputFolder;
 		this.markBuildUnstableWhenThresholdIsExceeded = markBuildUnstableWhenThresholdIsExceeded;
 		this.bugThreshold = bugThreshold;
-	}
-	
-	public String getScanBuildOutputFolder() {
-		return scanBuildOutputFolder;
-	}
-
-	public void setScanBuildOutputFolder(String scanBuildOutputFolder) {
-		this.scanBuildOutputFolder = scanBuildOutputFolder;
 	}
 
 	public int getBugThreshold() {
@@ -92,35 +82,35 @@ public class ClangScanBuildPublisher extends Recorder{
 
 		listener.getLogger().println( "Publishing Clang scan-build results" );
 		
-// these lines copy the clang output to the build artifacts
-		FilePath workspaceOutputFolder = ensureWorkspaceOutputFolder( build );
-		FilePath buildOutputFolder = new FilePath( new FilePath( build.getArtifactsDir() ), getScanBuildOutputFolder() );
-		copyClangReportsToBuildArtifacts( workspaceOutputFolder, buildOutputFolder, listener );
-
-// this digs into the clang results looking for the subfolder created by clang
-		List<FilePath> clangReports = locateClangBugReports( buildOutputFolder );
-
-// this loads the previous bug summary for the last build.  it is need to identify bugs added since last build
+		FilePath reportOutputFolder = ClangScanBuildUtils.locateClangScanBuildReportFolder( build );
+		
+		// This copies the reports out of the generate date sub folder to the root of the reports folder and then deletes the clang generated folder
+		copyClangReportsOutOfGeneratedSubFolder( reportOutputFolder, listener );
+		
+		// this digs into the clang results looking for the subfolder created by clang
+		List<FilePath> clangReports = locateClangBugReports( reportOutputFolder );
+		
+		// this loads the previous bug summary for the last build.  it is need to identify bugs added since last build
 		ClangScanBuildBugSummary previousBugSummary = getBugSummaryForLastBuild( build );
 
-// this builds and new bug summary and populates it with bugs
+		// this builds and new bug summary and populates it with bugs
 		ClangScanBuildBugSummary newBugSummary = new ClangScanBuildBugSummary( build.number );
 		for( FilePath report : clangReports ){
-// bugs are parsed inside this method:
+			// bugs are parsed inside this method:
 			ClangScanBuildBug bug = createBugFromClangScanBuildHtml( build.getProject().getName(), report, previousBugSummary, build.getWorkspace().getRemote() );
 			newBugSummary.add( bug );
 		}
 		
-// this line dumps a bugSummary.xml file to the build artifacts.  did this instead of using job config xml for performance
-		FilePath bugSummaryXMLFile = new FilePath( buildOutputFolder, "bugSummary.xml" );
+		// this line dumps a bugSummary.xml file to the build artifacts.  did this instead of using job config xml for performance
+		FilePath bugSummaryXMLFile = new FilePath( reportOutputFolder, "bugSummary.xml" );
 		String bugSummaryXML = AbstractBuild.XSTREAM.toXML( newBugSummary );
 		bugSummaryXMLFile.write( bugSummaryXML, "UTF-8" );
 		
-// this adds a build actions which records the bug count into the build results.  This count is used to generate the trend charts
-		final ClangScanBuildAction action = new ClangScanBuildAction( build, newBugSummary.getBugCount(), markBuildUnstableWhenThresholdIsExceeded, bugThreshold, scanBuildOutputFolder, bugSummaryXMLFile );
+		// this adds a build actions which records the bug count into the build results.  This count is used to generate the trend charts
+		final ClangScanBuildAction action = new ClangScanBuildAction( build, newBugSummary.getBugCount(), markBuildUnstableWhenThresholdIsExceeded, bugThreshold, bugSummaryXMLFile );
         build.getActions().add( action );
 
-// this checks if the build should be failed due to an increase in bugs
+        // this checks if the build should be failed due to an increase in bugs
         if( action.buildFailedDueToExceededThreshold() ){
         	listener.getLogger().println( "Clang scan-build threshhold exceeded." );
             build.setResult( Result.UNSTABLE );
@@ -130,21 +120,14 @@ public class ClangScanBuildPublisher extends Recorder{
 	}
 	
 	private ClangScanBuildBug createBugFromClangScanBuildHtml( String projectName, FilePath report, ClangScanBuildBugSummary previousBugSummary, String workspacePath ){
-// bugs are parsed inside this method:
 		ClangScanBuildBug bug = createBugInstance( projectName, report, workspacePath );
 
-// this checks to see if the bug is new since the last build
+		// this checks to see if the bug is new since the last build
 		if( previousBugSummary != null ){
 			// This marks bugs as new if they did not exist in the last build report
 			bug.setNewBug( !previousBugSummary.contains( bug ) );
 		}
 		return bug;
-	}
-
-	private FilePath ensureWorkspaceOutputFolder(AbstractBuild<?, ?> build) throws IOException, InterruptedException {
-		FilePath workspaceOutputFolder = new FilePath( build.getWorkspace(), getScanBuildOutputFolder() );
-		if( !workspaceOutputFolder.exists() ) workspaceOutputFolder.mkdirs();
-		return workspaceOutputFolder;
 	}
 
 	private ClangScanBuildBugSummary getBugSummaryForLastBuild( AbstractBuild<?, ?> build) {
@@ -162,29 +145,36 @@ public class ClangScanBuildPublisher extends Recorder{
 	 * This method locates the first subfolder of the output folder and copies its contents
 	 * to the build archive folder.
 	 */
-	private void copyClangReportsToBuildArtifacts( FilePath workspaceOutputFolder, FilePath buildOutputFolder, BuildListener listener ){
+	private void copyClangReportsOutOfGeneratedSubFolder( FilePath reportsFolder, BuildListener listener ){
 		try{
-			List<FilePath> subFolders = workspaceOutputFolder.listDirectories();
+			List<FilePath> subFolders = reportsFolder.listDirectories();
 			if( subFolders.isEmpty() ){
-				listener.getLogger().println( "Could not locate a unique scan-build output folder in: " + workspaceOutputFolder );
+				listener.getLogger().println( "Could not locate a unique scan-build output folder in: " + reportsFolder );
 				return;
 			}
 	
-			FilePath clangDateFolder = workspaceOutputFolder.listDirectories().get( 0 );
-			clangDateFolder.copyRecursiveTo( buildOutputFolder );
+			FilePath clangDateFolder = subFolders.get( 0 );
+			clangDateFolder.copyRecursiveTo( reportsFolder );
+			clangDateFolder.deleteRecursive();
 		}catch( Exception e ){
 			listener.fatalError( "Unable to copy Clan scan-build output to build archive folder." );
 		}
 	}
 
+	/**
+	 * This method creates a bug instance from scan-build HMTL report.  It does this by using reg-ex searches
+	 * to located HTML comments in the file which are easily parseable and appear in every HTML bug report from
+	 * scan-build.  If scan-build ever adds an XML option, this functionality can be replaced with an XML parsing
+	 * routine.
+	 */
 	private ClangScanBuildBug createBugInstance( String projectName, FilePath report, String workspacePath ){
-// the report parameter is the file the points to an HTML report generated by clang
+		// the report parameter is the file the points to an HTML report generated by clang
 		ClangScanBuildBug instance = new ClangScanBuildBug();
 		instance.setReportFile( report.getName() );
 		
 		String contents = null;
 		try {
-// this code digs into the HTML report content to locate the bug markers using regex
+			// this code digs into the HTML report content to locate the bug markers using regex
 			contents = report.readToString();
 			instance.setBugDescription( getMatch( BUG_DESC_PATTERN, contents ) );
 			instance.setBugType( getMatch( BUG_TYPE_PATTERN, contents ) );
@@ -214,6 +204,9 @@ public class ClangScanBuildPublisher extends Recorder{
 		return null;
 	}
 	
+	/**
+	 * This locates all the generated HTML bug reports from scan-build and returns them as a list.
+	 */
 	protected List<FilePath> locateClangBugReports( FilePath clangOutputFolder ) throws IOException, InterruptedException {
 		List<FilePath> files = new ArrayList<FilePath>();
 		if( !clangOutputFolder.exists() ) return files;
