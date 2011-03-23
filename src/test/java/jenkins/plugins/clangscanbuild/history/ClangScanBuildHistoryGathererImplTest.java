@@ -5,12 +5,10 @@ import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleProject;
 
 import java.util.List;
-import java.util.Map;
 
 import jenkins.plugins.clangscanbuild.actions.ClangScanBuildAction;
 import jenkins.plugins.clangscanbuild.reports.GraphPoint;
 
-import org.jfree.data.category.CategoryDataset;
 import org.junit.Assert;
 import org.junit.Test;
 import org.jvnet.hudson.test.HudsonTestCase;

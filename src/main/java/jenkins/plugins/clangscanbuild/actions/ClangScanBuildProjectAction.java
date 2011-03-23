@@ -57,8 +57,6 @@ public class ClangScanBuildProjectAction implements Action{
 	}
 
     public void doGraph( StaplerRequest req, StaplerResponse rsp ) throws IOException {
-    	System.err.println("DOING PNG");
-
         if( ChartUtil.awtProblemCause != null ){
             rsp.sendRedirect2( req.getContextPath() + DEFAULT_IMAGE );
             return;
@@ -68,8 +66,6 @@ public class ClangScanBuildProjectAction implements Action{
     }
     
     public void doMap( StaplerRequest req, StaplerResponse rsp ) throws IOException {
-    	System.err.println("DOING MAP");
-
     	getGraph().doMap( req, rsp );
     }
     
