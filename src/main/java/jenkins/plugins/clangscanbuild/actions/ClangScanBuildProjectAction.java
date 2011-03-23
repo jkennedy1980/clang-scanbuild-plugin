@@ -5,12 +5,13 @@ import hudson.model.AbstractProject;
 import hudson.util.ChartUtil;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 
 import jenkins.plugins.clangscanbuild.ClangScanBuildUtils;
 import jenkins.plugins.clangscanbuild.history.ClangScanBuildHistoryGatherer;
 import jenkins.plugins.clangscanbuild.history.ClangScanBuildHistoryGathererImpl;
 import jenkins.plugins.clangscanbuild.reports.ClangBuildGraph;
+import jenkins.plugins.clangscanbuild.reports.GraphPoint;
 
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -37,6 +38,13 @@ public class ClangScanBuildProjectAction implements Action{
 	public String getIconFileName() {
 		return ClangScanBuildUtils.getIconsPath() + "scanbuild-32x32.png";
 	}
+	
+	/**
+	 * Doing this wastefully because i do not know the lifecycle of this object.  Is it a singleton?
+	 */
+	public ClangBuildGraph getGraph(){
+		return new ClangBuildGraph( gatherer.gatherHistoryDataSet( project.getLastBuild() ) );
+	}
 
 	@Override
 	public String getDisplayName() {
@@ -49,24 +57,25 @@ public class ClangScanBuildProjectAction implements Action{
 	}
 
     public void doGraph( StaplerRequest req, StaplerResponse rsp ) throws IOException {
+    	System.err.println("DOING PNG");
 
         if( ChartUtil.awtProblemCause != null ){
             rsp.sendRedirect2( req.getContextPath() + DEFAULT_IMAGE );
             return;
         }
-    	
-    	Map<Integer,Integer> bugCountsByBuildNumber = gatherer.gatherHistory( project.getLastBuild() );
-    	if( bugCountsByBuildNumber.size() <= 0 ){
-    		rsp.sendRedirect2( req.getContextPath() + ClangScanBuildUtils.getTransparentImagePath() );
-    		return;
-    	}
-    	
-    	new ClangBuildGraph( bugCountsByBuildNumber ).doPng( req, rsp );
+
+    	getGraph().doPng( req, rsp );
+    }
+    
+    public void doMap( StaplerRequest req, StaplerResponse rsp ) throws IOException {
+    	System.err.println("DOING MAP");
+
+    	getGraph().doMap( req, rsp );
     }
     
     public boolean buildDataExists(){
-    	Map<Integer,Integer> bugCountsByBuildNumber = gatherer.gatherHistory( project.getLastBuild() );
-    	return bugCountsByBuildNumber.size() > 0;
+    	List<GraphPoint> points = gatherer.gatherHistoryDataSet( project.getLastBuild() );
+    	return points.size() > 0;
     }
     
 }

@@ -18,7 +18,7 @@ public class XCodeSDKsCommand implements Command{
 		return 1;
 	}
 	
-	protected ListBoxModel identifyAvailableSDKs( AbstractBuild build, Launcher launcher, PrintStream logger ){
+	protected ListBoxModel identifyAvailableSDKs( AbstractBuild<?,?> build, Launcher launcher, PrintStream logger ){
 		
 		ListBoxModel model = new ListBoxModel();
 		try {

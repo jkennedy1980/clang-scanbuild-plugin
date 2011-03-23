@@ -4,10 +4,13 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleProject;
 
+import java.util.List;
 import java.util.Map;
 
 import jenkins.plugins.clangscanbuild.actions.ClangScanBuildAction;
+import jenkins.plugins.clangscanbuild.reports.GraphPoint;
 
+import org.jfree.data.category.CategoryDataset;
 import org.junit.Assert;
 import org.junit.Test;
 import org.jvnet.hudson.test.HudsonTestCase;
@@ -25,11 +28,9 @@ public class ClangScanBuildHistoryGathererImplTest extends HudsonTestCase{
 		performBuildWithOutClangAction( project );
 		FreeStyleBuild lastBuild = performBuildWithClangAction( project, 3 );
 
-		Map<Integer,Integer> summaries = classUnderTest.gatherHistory( lastBuild );
-		System.err.println( summaries );
+		List<GraphPoint> summaries = classUnderTest.gatherHistoryDataSet( lastBuild );
+	
 		Assert.assertEquals( 2, summaries.size() );
-		Assert.assertEquals( 1, summaries.get(1) );
-		Assert.assertEquals( 3, summaries.get(3) );
 	}
 
 	@Test
@@ -38,10 +39,9 @@ public class ClangScanBuildHistoryGathererImplTest extends HudsonTestCase{
 		
 		FreeStyleBuild build1 = performBuildWithClangAction( project, 1 );
 		
-		Map<Integer,Integer> summaries = classUnderTest.gatherHistory( build1 );
+		List<GraphPoint> summaries = classUnderTest.gatherHistoryDataSet( build1 );
 		
 		Assert.assertEquals( 1, summaries.size() );
-		Assert.assertEquals( 1, summaries.get(1) );
 	}
 	
 	private class TestClangScanBuildAction extends ClangScanBuildAction{

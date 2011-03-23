@@ -2,10 +2,11 @@ package jenkins.plugins.clangscanbuild.history;
 
 import hudson.model.AbstractBuild;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import jenkins.plugins.clangscanbuild.actions.ClangScanBuildAction;
+import jenkins.plugins.clangscanbuild.reports.GraphPoint;
 
 public class ClangScanBuildHistoryGathererImpl implements ClangScanBuildHistoryGatherer{
 
@@ -20,23 +21,21 @@ public class ClangScanBuildHistoryGathererImpl implements ClangScanBuildHistoryG
 		this.numberOfBuildsToGather = numberOfBuildsToGather;
 	}
 	
-	@Override
-	public Map<Integer,Integer> gatherHistory( AbstractBuild<?, ?> latestBuild ){
-		Map<Integer,Integer> bugCountsByBuildNumber = new HashMap<Integer, Integer>();
-
-		if( latestBuild == null ) return bugCountsByBuildNumber;
+	public List<GraphPoint> gatherHistoryDataSet( AbstractBuild<?,?> latestBuild ){
+		List<GraphPoint> points = new ArrayList<GraphPoint>();
+		if( latestBuild == null ) return points;
 		
 		int gatheredBuilds = 0;
 	    for( AbstractBuild<?,?> build = latestBuild; build != null; build = build.getPreviousBuild() ){
-	    	if( gatheredBuilds >= numberOfBuildsToGather ) return bugCountsByBuildNumber;
+	    	if( gatheredBuilds >= numberOfBuildsToGather ) return points;
 	    	
 	    	ClangScanBuildAction action = build.getAction( ClangScanBuildAction.class );
 	        if( action == null ) continue;
-
-            bugCountsByBuildNumber.put( build.getNumber(), action.getBugCount() );
+	        
+	        points.add( new GraphPoint( build, action.getBugCount() ) );
 	    }
 		
-		return bugCountsByBuildNumber;
+	    return points;
 	}
 
 }

@@ -24,6 +24,7 @@ import org.kohsuke.stapler.StaplerResponse;
  */
 public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 
+	public static final String BUILD_ACTION_URL_NAME = "clangScanBuildBugs";
 	private int bugThreshold;
 	private FilePath bugSummaryXML;
 	private boolean markBuildUnstable;
@@ -95,7 +96,7 @@ public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 	 */
 	@Override
 	public String getUrlName() {
-		return "clangScanBuildBugs";
+		return BUILD_ACTION_URL_NAME;
 	}
 
 	/**

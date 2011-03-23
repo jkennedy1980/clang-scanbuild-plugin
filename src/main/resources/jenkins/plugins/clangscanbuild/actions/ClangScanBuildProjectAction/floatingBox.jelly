@@ -5,7 +5,9 @@
 		<div class="test-trend-caption">Clang scan-build trend</div>
 		
 		<div>
-			<a href="clangScanBuildTrend"><img src="clangScanBuildTrend/graph" /></a>
+			<img src="clangScanBuildTrend/graph" lazymap="clangScanBuildTrend/map"/>
+			<br/>
+			<a href="clangScanBuildTrend">enlarge</a>
 		</div>
 	</j:if>
 
