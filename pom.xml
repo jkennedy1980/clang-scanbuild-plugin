@@ -13,14 +13,13 @@
   <name>Clang Scan-Build Plugin</name>
   <version>1.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
-
-  <!-- get every artifact through maven.glassfish.org, which proxies all the artifacts that we need -->
   <description>Provides an easy way to execute and report Clang scan-build errors using jenkins</description>
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Clang+Scan-Build+Plugin</url>
   
   <scm>
-    <connection>scm:git:git@github.com:jkennedy1980/clang-scanbuild-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jkennedy1980/clang-scanbuild-plugin.git</developerConnection>
+    <connection>scm:git:git://github.com/jenkinsci/clang-scanbuild-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/clang-scanbuild-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/clang-scanbuild-plugin</url>
   </scm>
   
   <developers>
