@@ -1,23 +1,28 @@
 package jenkins.plugins.clangscanbuild.publisher;
 
-import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 
 import org.junit.Test;
 import org.jvnet.hudson.test.HudsonTestCase;
 
+import com.gargoylesoftware.htmlunit.html.HtmlForm;
+
 public class ClangScanBuildPublisherTest extends HudsonTestCase{
 
 	@Test
-	public void test() throws Exception{
+	public void testRoundTripConfiguration() throws Exception{
 		
-		ClangScanBuildPublisher publisher = new ClangScanBuildPublisher( true, 0 );
-		FreeStyleProject project = createFreeStyleProject();
+		FreeStyleProject p = createFreeStyleProject();
 		
-		project.getPublishersList().add( publisher );
-		
-		FreeStyleBuild build = project.scheduleBuild2(0).get();
-		
+		ClangScanBuildPublisher publisherBefore = new ClangScanBuildPublisher( true, 45 );
+		p.getPublishersList().add( publisherBefore );
+
+		HtmlForm form = createWebClient().getPage( p, "configure" ).getFormByName( "config" );
+		submit( form );
+
+		ClangScanBuildPublisher publisherAfter = p.getPublishersList().get( ClangScanBuildPublisher.class );
+
+		assertEqualBeans( publisherBefore, publisherAfter, "bugThreshold,markBuildUnstableWhenThresholdIsExceeded" );
 	}
 	
 }

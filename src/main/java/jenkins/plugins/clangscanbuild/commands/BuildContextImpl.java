@@ -5,6 +5,7 @@ import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
+import hudson.util.ArgumentListBuilder;
 
 import java.io.IOException;
 
@@ -51,6 +52,26 @@ public class BuildContextImpl implements BuildContext{
 	@Override
 	public FilePath getBuildFolder() {
 		return new FilePath( build.getRootDir() );
+	}
+
+	@Override
+	public int waitForProcess( FilePath presentWorkingDirectory, ArgumentListBuilder command ){
+		ProcStarter procStarter = launcher.launch();
+		procStarter.pwd( presentWorkingDirectory );
+		procStarter.stdout( listener ); // maps output from command to console output.  Some commands will need to override this because they need to capture the output.
+		procStarter.cmds( command );
+		
+		log( "EXECTING COMMAND:" + procStarter.cmds() );
+
+		try {
+			return procStarter.join();
+		} catch (IOException e) {
+			log( "Error starting process: " + procStarter + "\n" + e.getMessage() );
+		} catch (InterruptedException e) {
+			log( "Process was interrupted: " + procStarter + "\n" + e.getMessage() );
+		}
+		
+		return 1; // ERROR
 	}
 
 }
