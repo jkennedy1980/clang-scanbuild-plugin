@@ -94,7 +94,6 @@ public class ClangScanBuildDescriptor extends BuildStepDescriptor<Builder>{
      */
     @Override
     public boolean configure( StaplerRequest req, JSONObject formData ) throws FormException{
-    	System.err.println("JOSH SAVING");
     	// This is called from a save of the global settings
         save();
         
