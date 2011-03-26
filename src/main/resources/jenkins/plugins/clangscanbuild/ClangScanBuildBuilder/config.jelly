@@ -20,6 +20,14 @@
     		<f:textbox />
   	</f:entry>
   	
+  	<f:entry title="XCode4 Workspace" field="workspace">
+    		<f:textbox />
+  	</f:entry>
+  	
+  	<f:entry title="XCode4 Scheme" field="scheme">
+    		<f:textbox />
+  	</f:entry>
+  	
   	<f:entry title="XCode project sub-path" field="xcodeProjectSubPath">
     		<f:textbox default="" />
   	</f:entry>
