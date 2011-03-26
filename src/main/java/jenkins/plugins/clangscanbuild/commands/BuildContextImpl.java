@@ -42,13 +42,6 @@ public class BuildContextImpl implements BuildContext{
 		listener.getLogger().println( message );
 	}
 
-	public ProcStarter getProcStarter() {
-		ProcStarter procStarter = launcher.launch();
-		procStarter.pwd( getWorkspace() ); // sets present working directory for command
-		procStarter.stdout( listener ); // maps output from command to console output.  Some commands will need to override this because they need to capture the output.
-		return procStarter;
-	}
-
 	@Override
 	public FilePath getBuildFolder() {
 		return new FilePath( build.getRootDir() );
@@ -61,7 +54,7 @@ public class BuildContextImpl implements BuildContext{
 		procStarter.stdout( listener ); // maps output from command to console output.  Some commands will need to override this because they need to capture the output.
 		procStarter.cmds( command );
 		
-		log( "EXECTING COMMAND:" + procStarter.cmds() );
+		log( "EXECUTING COMMAND:" + procStarter.cmds() );
 
 		try {
 			return procStarter.join();

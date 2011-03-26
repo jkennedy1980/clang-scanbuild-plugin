@@ -64,12 +64,6 @@ public class ClangScanBuildDescriptor extends BuildStepDescriptor<Builder>{
         save();
     }
 
-    // TARGET
-    public FormValidation doCheckTarget( @QueryParameter String value ) throws IOException, ServletException {
-    	if( value.length() == 0 ) return FormValidation.warning( "If no build target is provided, the project's 'active' build target will be used automatically." );
-        return FormValidation.ok();
-    }
-	
 	// TARGET SDK
     public FormValidation doCheckTargetSdk( @QueryParameter String value ) throws IOException, ServletException {
     	if( value.length() == 0 ) return FormValidation.error( "You must provide a target SDK.  You can execute 'xcodebuild -showsdks' from Terminal.app to see allowed values." );
@@ -100,7 +94,7 @@ public class ClangScanBuildDescriptor extends BuildStepDescriptor<Builder>{
      */
     @Override
     public boolean configure( StaplerRequest req, JSONObject formData ) throws FormException{
-
+    	System.err.println("JOSH SAVING");
     	// This is called from a save of the global settings
         save();
         

@@ -42,6 +42,10 @@ public class ScanBuildCommand implements Command{
 			// Xcode 4 workspace
 			args.add( "-workspace", getWorkspace() );
 			args.add( "-scheme", getScheme() );
+			
+			if( isNotBlank( getTarget() ) ){
+				context.log( "Ignoring build target '" + getTarget() + "' because a workspace & scheme was provided" );
+			}
 		}else{ 
 			// Xcode 3,4 standalone project
 			if( isNotBlank( getTarget() ) ){
