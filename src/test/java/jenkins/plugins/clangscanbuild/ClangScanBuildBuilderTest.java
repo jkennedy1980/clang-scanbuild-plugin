@@ -1,0 +1,28 @@
+package jenkins.plugins.clangscanbuild;
+
+import hudson.model.FreeStyleProject;
+
+import org.junit.Test;
+import org.jvnet.hudson.test.HudsonTestCase;
+
+import com.gargoylesoftware.htmlunit.html.HtmlForm;
+
+public class ClangScanBuildBuilderTest extends HudsonTestCase{
+	
+	@Test
+	public void testRoundTripConfiguration() throws Exception{
+		
+		FreeStyleProject p = createFreeStyleProject();
+		
+		ClangScanBuildBuilder builderBefore = new ClangScanBuildBuilder( "target", "sdk", "config", "installName", "projPath", "workspace", "scheme" );
+		p.getBuildersList().add( builderBefore );
+
+		HtmlForm form = createWebClient().getPage( p, "configure" ).getFormByName( "config" );
+		submit( form );
+
+		ClangScanBuildBuilder builderAfter = p.getBuildersList().get( ClangScanBuildBuilder.class );
+
+		assertEqualBeans( builderBefore, builderAfter, "target,targetSdk,config,xcodeProjectSubPath,workspace,scheme" );
+	}
+	
+}

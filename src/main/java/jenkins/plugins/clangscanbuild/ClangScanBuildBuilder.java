@@ -33,6 +33,8 @@ public class ClangScanBuildBuilder extends Builder{
     private String config;
     private String clangInstallationName;
     private String xcodeProjectSubPath;
+    private String workspace;
+    private String scheme;
 
     @DataBoundConstructor
     public ClangScanBuildBuilder( 
@@ -40,13 +42,17 @@ public class ClangScanBuildBuilder extends Builder{
     		String targetSdk, 
     		String config, 
     		String clangInstallationName,
-    		String xcodeProjectSubPath ){
+    		String xcodeProjectSubPath,
+    		String workspace,
+    		String scheme ){
     	
         this.target = Util.fixEmptyAndTrim( target );
         this.targetSdk = Util.fixEmptyAndTrim( targetSdk );
         this.config = Util.fixEmptyAndTrim( config );     
         this.clangInstallationName = Util.fixEmptyAndTrim( clangInstallationName );
         this.xcodeProjectSubPath = Util.fixEmptyAndTrim( xcodeProjectSubPath );
+        this.workspace = Util.fixEmptyAndTrim( workspace );
+        this.scheme = Util.fixEmptyAndTrim( scheme );
     }
 
     public String getClangInstallationName(){
@@ -63,6 +69,14 @@ public class ClangScanBuildBuilder extends Builder{
 
 	public String getConfig() {
 		return config;
+	}
+	
+	public String getWorkspace(){
+		return workspace;
+	}
+	
+	public String getScheme(){
+		return scheme;
 	}
 	
 	/**
@@ -90,7 +104,6 @@ public class ClangScanBuildBuilder extends Builder{
 			listener.fatalError( "Unable to locate the clang installation named '" + getClangInstallationName() + "'.  Please confirm a clang installation named '" + getClangInstallationName() + "' is defined in the jenkins master config. " );
 			return false;
 		}
-		
 
 		FilePath reportOutputFolder = ClangScanBuildUtils.locateClangScanBuildReportFolder( build );
 
@@ -99,6 +112,8 @@ public class ClangScanBuildBuilder extends Builder{
 		xcodebuild.setTargetSdk( getTargetSdk() );
 		xcodebuild.setConfig( getConfig() );
 		xcodebuild.setClangOutputFolder( reportOutputFolder );
+		xcodebuild.setWorkspace( getWorkspace() );
+		xcodebuild.setScheme( getScheme() );
 		
 		if( getXcodeProjectSubPath() != null ){
 			xcodebuild.setProjectDirectory( new FilePath( build.getWorkspace(), getXcodeProjectSubPath() ) );
@@ -119,7 +134,6 @@ public class ClangScanBuildBuilder extends Builder{
 		}
 		
 		int rc = CommandExecutor.execute( xcodebuild ).withContext( new BuildContextImpl( build, launcher, listener ) );
-
         return rc == CommandExecutor.SUCCESS;
     }
 

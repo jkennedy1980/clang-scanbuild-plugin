@@ -1,18 +1,22 @@
 package jenkins.plugins.clangscanbuild.commands;
 
 import hudson.FilePath;
-import hudson.Launcher.ProcStarter;
 import hudson.util.ArgumentListBuilder;
 import jenkins.plugins.clangscanbuild.CommandExecutor;
 
 public class ScanBuildCommand implements Command{
 	
-	private String target;
+	private String clangScanBuildPath;
+	private FilePath projectDirectory;
+    private FilePath clangOutputFolder;
+    
     private String targetSdk;
     private String config = "Debug";
-    private String clangScanBuildPath;
-    private FilePath clangOutputFolder;
-    private FilePath projectDirectory;
+    
+    private String target;
+    
+    private String workspace;
+    private String scheme;
 	
 	public int execute( BuildContext context ) throws Exception {
 
@@ -34,29 +38,31 @@ public class ScanBuildCommand implements Command{
 		
 		args.add( "xcodebuild" );
 		
-		if( !isBlank( getTarget() ) ){
-			args.add( "-target", getTarget() );
-		}else{
-			args.add( "-activetarget" );
+		if( isNotBlank( getWorkspace() ) ){ 
+			// Xcode 4 workspace
+			args.add( "-workspace", getWorkspace() );
+			args.add( "-scheme", getScheme() );
+			
+			if( isNotBlank( getTarget() ) ){
+				context.log( "Ignoring build target '" + getTarget() + "' because a workspace & scheme was provided" );
+			}
+		}else{ 
+			// Xcode 3,4 standalone project
+			if( isNotBlank( getTarget() ) ){
+				args.add( "-target", getTarget() );
+			}else{
+				args.add( "-activetarget" );
+			}
 		}
+
+		//These items can be provided with a target or can be used to override a workspace/scheme
+		if( isNotBlank( getConfig() ) ) args.add( "-configuration", getConfig() );  // Defaults to Debug
+		if( isNotBlank( getTargetSdk() ) ) args.add( "-sdk", getTargetSdk() );
 		
-		if( !isBlank( getConfig() ) ){
-			args.add( "-configuration", getConfig() );
-		}else{
-			args.add( "-activeconfiguration" );
-		}
-		
-		args.add( "-sdk", getTargetSdk() );
 		args.add( "clean" ); // clang scan requires a clean
 		args.add( "build" );
-		
-		ProcStarter starter = context.getProcStarter();
-		starter.cmds( args );
-		starter.pwd( getProjectDirectory() );
-		
-		context.log( "COMMANDS:" + starter.cmds() );
-		
-		int rc = context.waitForProcess( starter );
+
+		int rc = context.waitForProcess( getProjectDirectory(), args );
 
 		if( rc == CommandExecutor.SUCCESS ){
 			context.log( "XCODEBUILD SUCCESS" );
@@ -71,6 +77,10 @@ public class ScanBuildCommand implements Command{
 	private boolean isBlank( String value ){
 		if( value == null ) return true;
 		return value.trim().length() <= 0;
+	}
+	
+	private boolean isNotBlank( String value ){
+		return !isBlank( value );
 	}
 	
 	public String getTargetSdk() {
@@ -120,6 +130,21 @@ public class ScanBuildCommand implements Command{
 	public void setClangOutputFolder(FilePath clangOutputFolder) {
 		this.clangOutputFolder = clangOutputFolder;
 	}
-	
+
+	public String getWorkspace() {
+		return workspace;
+	}
+
+	public void setWorkspace(String workspace) {
+		this.workspace = workspace;
+	}
+
+	public String getScheme() {
+		return scheme;
+	}
+
+	public void setScheme(String scheme) {
+		this.scheme = scheme;
+	}
 
 }
