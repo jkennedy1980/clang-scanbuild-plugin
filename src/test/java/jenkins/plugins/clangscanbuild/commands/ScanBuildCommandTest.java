@@ -18,13 +18,13 @@ public class ScanBuildCommandTest{
 	@Test
 	public void onlyRequiredOptionsSet() throws Exception{
 		ScanBuildCommand command = new ScanBuildCommand();
-		command.setClangOutputFolder( new FilePath( new File( "/OutputFolder" ) ) );
+		command.setClangOutputFolder( new FilePath( new File( "OutputFolder" ) ) );
 		command.setClangScanBuildPath( "/ScanBuild" );
 		command.setProjectDirectory( new FilePath( new File( "/ProjectDir" ) ) );
 
 		String actual = buildCommandAndReturn( command );
 		
-		String expected = "/ScanBuild -k -v -v -o /OutputFolder xcodebuild -activetarget -configuration Debug clean build";
+		String expected = "/ScanBuild -k -v -v -o OutputFolder xcodebuild -activetarget -configuration Debug clean build";
 		Assert.assertEquals( expected, actual );
 	}
 	
@@ -32,7 +32,7 @@ public class ScanBuildCommandTest{
 	public void xcode4WorkspaceSet() throws Exception{
 		// XCode 4 workspace/scheme should override unnecessary target
 		ScanBuildCommand command = new ScanBuildCommand();
-		command.setClangOutputFolder( new FilePath( new File( "/OutputFolder" ) ) );
+		command.setClangOutputFolder( new FilePath( new File( "OutputFolder" ) ) );
 		command.setClangScanBuildPath( "/ScanBuild" );
 		command.setConfig( "myConfig" );
 		command.setProjectDirectory( new FilePath( new File( "/ProjectDir" ) ) );
@@ -43,7 +43,7 @@ public class ScanBuildCommandTest{
 		
 		String actual = buildCommandAndReturn( command );
 		
-		String expected = "/ScanBuild -k -v -v -o /OutputFolder xcodebuild -workspace myWorkspace -scheme myScheme -configuration myConfig -sdk myTargetSdk clean build";
+		String expected = "/ScanBuild -k -v -v -o OutputFolder xcodebuild -workspace myWorkspace -scheme myScheme -configuration myConfig -sdk myTargetSdk clean build";
 		Assert.assertEquals( expected, actual );
 	}
 	
@@ -51,7 +51,7 @@ public class ScanBuildCommandTest{
 	public void xcode3TargetSet() throws Exception{
 		// XCode 4 workspace/scheme should override unnecessary target
 		ScanBuildCommand command = new ScanBuildCommand();
-		command.setClangOutputFolder( new FilePath( new File( "/OutputFolder" ) ) );
+		command.setClangOutputFolder( new FilePath( new File( "OutputFolder" ) ) );
 		command.setClangScanBuildPath( "/ScanBuild" );
 		command.setConfig( "myConfig" );
 		command.setProjectDirectory( new FilePath( new File( "/ProjectDir" ) ) );
@@ -60,7 +60,7 @@ public class ScanBuildCommandTest{
 		
 		String actual = buildCommandAndReturn( command );
 		
-		String expected = "/ScanBuild -k -v -v -o /OutputFolder xcodebuild -target myTarget -configuration myConfig -sdk myTargetSdk clean build";
+		String expected = "/ScanBuild -k -v -v -o OutputFolder xcodebuild -target myTarget -configuration myConfig -sdk myTargetSdk clean build";
 		Assert.assertEquals( expected, actual );
 	}
 	
