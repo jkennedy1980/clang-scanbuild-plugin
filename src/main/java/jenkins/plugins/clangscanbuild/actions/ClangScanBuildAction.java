@@ -63,7 +63,17 @@ public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 		if( bugSummaryXML == null ) return null;
 		
 		try{
-			return (ClangScanBuildBugSummary) AbstractBuild.XSTREAM.fromXML( bugSummaryXML.read() );
+		    if( bugSummaryXML.length() != 0 )
+		    {
+			    return (ClangScanBuildBugSummary) AbstractBuild.XSTREAM.fromXML( bugSummaryXML.read() );
+		    }
+		    else
+		    {
+		        return null;
+		    }
+	    }catch( java.lang.InterruptedException ie ){
+			System.err.println( ie );
+			return null;
 		}catch( IOException ioe ){
 			System.err.println( ioe );
 			return null;
