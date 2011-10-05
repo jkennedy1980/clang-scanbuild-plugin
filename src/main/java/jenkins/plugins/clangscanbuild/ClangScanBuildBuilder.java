@@ -111,7 +111,7 @@ public class ClangScanBuildBuilder extends Builder{
 		xcodebuild.setTarget( getTarget() );
 		xcodebuild.setTargetSdk( getTargetSdk() );
 		xcodebuild.setConfig( getConfig() );
-		xcodebuild.setClangOutputFolder( reportOutputFolder );
+		xcodebuild.setClangOutputFolder( new FilePath( build.getWorkspace(), ClangScanBuildUtils.REPORT_OUTPUT_FOLDERNAME) );
 		xcodebuild.setWorkspace( getWorkspace() );
 		xcodebuild.setScheme( getScheme() );
 		
