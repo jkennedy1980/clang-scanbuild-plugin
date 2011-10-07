@@ -82,7 +82,7 @@ public class ClangScanBuildPublisher extends Recorder{
 
 		listener.getLogger().println( "Publishing Clang scan-build results" );
 		
-		FilePath reportOutputFolder = ClangScanBuildUtils.locateClangScanBuildReportFolder( build );
+		FilePath reportOutputFolder = new FilePath(build.getWorkspace(), ClangScanBuildUtils.REPORT_OUTPUT_FOLDERNAME); 
 		
 		// This copies the reports out of the generate date sub folder to the root of the reports folder and then deletes the clang generated folder
 		copyClangReportsOutOfGeneratedSubFolder( reportOutputFolder, listener );
