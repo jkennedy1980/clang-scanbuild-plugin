@@ -83,9 +83,13 @@ public class ClangScanBuildPublisher extends Recorder{
 		listener.getLogger().println( "Publishing Clang scan-build results" );
 		
 		FilePath reportOutputFolder = new FilePath(build.getWorkspace(), ClangScanBuildUtils.REPORT_OUTPUT_FOLDERNAME); 
+		FilePath reportMasterOutputFolder = ClangScanBuildUtils.locateClangScanBuildReportFolder(build);
 		
 		// This copies the reports out of the generate date sub folder to the root of the reports folder and then deletes the clang generated folder
 		copyClangReportsOutOfGeneratedSubFolder( reportOutputFolder, listener );
+		
+		// This copies the report dir to master
+		copyClangReportsToMaster( reportOutputFolder, reportMasterOutputFolder, listener );
 		
 		// this digs into the clang results looking for the subfolder created by clang
 		List<FilePath> clangReports = locateClangBugReports( reportOutputFolder );
@@ -102,7 +106,8 @@ public class ClangScanBuildPublisher extends Recorder{
 		}
 		
 		// this line dumps a bugSummary.xml file to the build artifacts.  did this instead of using job config xml for performance
-		FilePath bugSummaryXMLFile = new FilePath( reportOutputFolder, "bugSummary.xml" );
+		//FilePath bugSummaryXMLFile = new FilePath( reportOutputFolder, "bugSummary.xml" );
+		FilePath bugSummaryXMLFile = new FilePath( new FilePath( build.getRootDir() ), "bugSummary.xml" );
 		String bugSummaryXML = AbstractBuild.XSTREAM.toXML( newBugSummary );
 		bugSummaryXMLFile.write( bugSummaryXML, "UTF-8" );
 		
@@ -158,6 +163,16 @@ public class ClangScanBuildPublisher extends Recorder{
 			clangDateFolder.deleteRecursive();
 		}catch( Exception e ){
 			listener.fatalError( "Unable to copy Clan scan-build output to build archive folder." );
+		}
+	}
+	/**
+	 * Copy clang output folder to have access to html files from the master
+	 */
+	private void copyClangReportsToMaster( FilePath reportsFolder, FilePath materPath, BuildListener listener ){
+		try{
+			reportsFolder.copyRecursiveTo( materPath );
+		}catch( Exception e ){
+			listener.fatalError( "Unable to copy Clang scan-build output to master." );
 		}
 	}
 
