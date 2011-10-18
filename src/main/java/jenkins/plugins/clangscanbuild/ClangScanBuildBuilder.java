@@ -105,8 +105,6 @@ public class ClangScanBuildBuilder extends Builder{
 			return false;
 		}
 
-		FilePath reportOutputFolder = ClangScanBuildUtils.locateClangScanBuildReportFolder( build );
-
 		ScanBuildCommand xcodebuild = new ScanBuildCommand();
 		xcodebuild.setTarget( getTarget() );
 		xcodebuild.setTargetSdk( getTargetSdk() );
