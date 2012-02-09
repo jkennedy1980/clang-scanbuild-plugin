@@ -1,11 +1,13 @@
 package jenkins.plugins.clangscanbuild.commands;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.util.ArgumentListBuilder;
+import hudson.model.TaskListener;
 
 import java.io.IOException;
 
@@ -49,7 +51,17 @@ public class BuildContextImpl implements BuildContext{
 
 	@Override
 	public int waitForProcess( FilePath presentWorkingDirectory, ArgumentListBuilder command ){
+
 		ProcStarter procStarter = launcher.launch();
+        try {
+            final EnvVars buildEnvironment = build.getEnvironment( TaskListener.NULL );
+            procStarter.envs( buildEnvironment );
+        } catch (IOException e) {
+			log( "Error getting environment: " + e.getMessage() );
+        } catch (InterruptedException e) {
+			log( "Interrupted when getting environment: " + e.getMessage() );
+        }
+
 		procStarter.pwd( presentWorkingDirectory );
 		procStarter.stdout( listener ); // maps output from command to console output.  Some commands will need to override this because they need to capture the output.
 		procStarter.cmds( command );
