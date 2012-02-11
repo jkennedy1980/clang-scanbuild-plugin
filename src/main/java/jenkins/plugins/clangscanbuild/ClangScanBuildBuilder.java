@@ -1,22 +1,21 @@
 package jenkins.plugins.clangscanbuild;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
+import hudson.model.Computer;
 import hudson.tasks.Builder;
-import hudson.util.FormValidation;
+
+import java.io.IOException;
+
 import jenkins.plugins.clangscanbuild.commands.BuildContextImpl;
 import jenkins.plugins.clangscanbuild.commands.ScanBuildCommand;
 
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
 
 /**
  * This builder provides a new build step for freestyle jobs.  Users can 
@@ -108,16 +107,21 @@ public class ClangScanBuildBuilder extends Builder{
 	 * @return boolean - if 'false', build will be aborted
 	 */
 	@Override
-    public boolean perform( @SuppressWarnings("rawtypes") AbstractBuild build, Launcher launcher, BuildListener listener ) {
+    public boolean perform( @SuppressWarnings("rawtypes") AbstractBuild build, Launcher launcher, BuildListener listener ) throws IOException, InterruptedException {
 		
 		ClangScanBuildToolInstallation clangInstallation = DESCRIPTOR.getNamedInstallation( getClangInstallationName() );
 		if( clangInstallation == null ){
 			// somehow config has gotten out of whack.  User has a named clang installation that no longer exists in
 			// the master hudson config.  We need it to get the path to clang.
-			listener.fatalError( "Unable to locate the clang installation named '" + getClangInstallationName() + "'.  Please confirm a clang installation named '" + getClangInstallationName() + "' is defined in the jenkins master config. " );
+			listener.fatalError( "Unable to locate the clang scan-build installation named '" + getClangInstallationName() + "'.  Please confirm a clang installation named '" + getClangInstallationName() + "' is defined in the jenkins global config and on each slave if the location is different than the master. " );
 			return false;
 		}
 
+		// Convert the clang installation to the node specific clang installation
+		clangInstallation = clangInstallation.forNode( Computer.currentComputer().getNode(), listener );
+		EnvVars env = build.getEnvironment(listener);
+		clangInstallation = clangInstallation.forEnvironment( env );
+		
 		ScanBuildCommand xcodebuild = new ScanBuildCommand();
 		xcodebuild.setTarget( getTarget() );
 		xcodebuild.setTargetSdk( getTargetSdk() );
@@ -136,12 +140,12 @@ public class ClangScanBuildBuilder extends Builder{
 		try {
 			String path = clangInstallation.getExecutable( launcher ) ;
 			if( path == null ){
-				listener.fatalError( "Unable to locate 'scan-build' within '" + clangInstallation.getHome() + "' as configured in clang installation named '" + clangInstallation.getName() + "' in the master config." );
+				listener.fatalError( "Unable to locate 'scan-build' within '" + clangInstallation.getHome() + "' as configured in clang installation named '" + clangInstallation.getName() + "' in the global config." );
 				return false;
 			}
 			xcodebuild.setClangScanBuildPath( path );
 		} catch ( Exception e) {
-			listener.fatalError( "Unable to locate 'scan-build' within '" + clangInstallation.getHome() + "' as configured in clang installation named '" + clangInstallation.getName() + "' in the master config." );
+			listener.fatalError( "Unable to locate 'scan-build' within '" + clangInstallation.getHome() + "' as configured in clang installation named '" + clangInstallation.getName() + "' in the global config.", e );
 			return false;
 		}
 		

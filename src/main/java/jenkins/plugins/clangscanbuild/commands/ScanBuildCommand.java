@@ -24,7 +24,7 @@ public class ScanBuildCommand implements Command{
 
 		if( clangOutputFolder.exists() ){
 			// this should never happen because this folder is in the build directory - famous last words
-			context.log( "Deleting " + getClangOutputFolder().getRemote() + " contents from previous build." );
+			context.log( "Deleting '" + getClangOutputFolder().getRemote() + "' contents from previous build." );
 			clangOutputFolder.deleteContents();
 		}else{
 			clangOutputFolder.mkdirs();
@@ -38,7 +38,7 @@ public class ScanBuildCommand implements Command{
 		args.add( "-v" ); // even more verbose
 		
 		args.add( "-o" ); // output folder
-		args.add( "" + clangOutputFolder.getRemote().replaceAll( " ", "/ " ) + "" );
+		args.add( escapeSpacesInPath( clangOutputFolder.getRemote() ) );
 		
 		String additionalArgs = getAdditionalScanBuildArguments();
 		if( isNotBlank( additionalArgs ) ){
@@ -91,6 +91,11 @@ public class ScanBuildCommand implements Command{
 	private boolean isBlank( String value ){
 		if( value == null ) return true;
 		return value.trim().length() <= 0;
+	}
+	
+	private String escapeSpacesInPath( String path ){
+		if( path == null ) return "";
+		return path.replaceAll( " ", "\\ " );
 	}
 	
 	private boolean isNotBlank( String value ){

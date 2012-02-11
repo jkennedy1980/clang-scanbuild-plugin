@@ -4,10 +4,12 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
+import hudson.model.EnvironmentSpecific;
 import hudson.model.TaskListener;
 import hudson.model.Hudson;
 import hudson.model.Node;
 import hudson.remoting.Callable;
+import hudson.slaves.NodeSpecific;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolProperty;
 import hudson.tools.ToolInstallation;
@@ -20,7 +22,7 @@ import java.util.List;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-public class ClangScanBuildToolInstallation extends ToolInstallation{
+public class ClangScanBuildToolInstallation extends ToolInstallation implements NodeSpecific<ClangScanBuildToolInstallation>, EnvironmentSpecific<ClangScanBuildToolInstallation>{
 
 	private static final long serialVersionUID = -2485377492741518511L;
 	
@@ -36,16 +38,14 @@ public class ClangScanBuildToolInstallation extends ToolInstallation{
     }
 
     private static String removeTrailingSlashes( String home ) {
+    	if( home == null ) return "";
         if( home.endsWith( "/" ) || home.endsWith( "\\" ) ){
             return home.substring( 0, home.length() - 1 );
         } else {
             return home;
         }
     }
-    
-	/**
-     * Gets the executable path of this Ant on the given target system.
-     */
+
     public String getExecutable( Launcher launcher ) throws IOException, InterruptedException {
         return launcher.getChannel().call( new Callable<String,IOException>() {
 
@@ -76,7 +76,6 @@ public class ClangScanBuildToolInstallation extends ToolInstallation{
             return "Clang Static Analyzer";
         }
 
-        // for compatibility reasons, the persistence is done by the XCodeBuildBuildDescriptor  
         @Override
         public ClangScanBuildToolInstallation[] getInstallations() {
             return locateMainDescriptor().getInstallations();
@@ -100,9 +99,9 @@ public class ClangScanBuildToolInstallation extends ToolInstallation{
         	// some one could brute force files paths to determine what is on a server
         	if( !Hudson.getInstance().hasPermission( Hudson.ADMINISTER ) ) return FormValidation.ok();
 
-            if( value.getPath().equals( "" ) ) return FormValidation.ok();
+            if( value.getPath().equals( "" ) ) return FormValidation.ok(); // can be blank for master configurations and overriden on nodes
 
-            if( !value.isDirectory() ) return FormValidation.error( "Please enter the path to the folder which contains the Clang static analyzer." );
+            if( !value.isDirectory() ) return FormValidation.error( "Please enter the path to the folder which contains the Clang static analyzer.  If this is your master and you will be overriding this value on a node you can leave this value blank." );
 
             File scanBuild = new File( value, "scan-build" );
             if( !scanBuild.exists() ) return FormValidation.warning( "Unable to locate 'scan-build' in the provided home directory." );
