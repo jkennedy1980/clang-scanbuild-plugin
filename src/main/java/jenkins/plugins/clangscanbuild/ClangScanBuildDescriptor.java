@@ -64,7 +64,6 @@ public class ClangScanBuildDescriptor extends BuildStepDescriptor<Builder>{
         save();
     }
 
-	// TARGET SDK
     public FormValidation doCheckTargetSdk( @QueryParameter String value ) throws IOException, ServletException {
     	if( value.length() == 0 ) return FormValidation.error( "You must provide a target SDK.  You can execute 'xcodebuild -showsdks' from Terminal.app to see allowed values." );
         return FormValidation.ok();

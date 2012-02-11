@@ -15,6 +15,8 @@ public class ScanBuildCommand implements Command{
     
     private String target;
     
+    private String additionalScanBuildArguments; // Passed directly to shell
+    
     private String workspace;
     private String scheme;
 	
@@ -30,11 +32,23 @@ public class ScanBuildCommand implements Command{
 
 		ArgumentListBuilder args = new ArgumentListBuilder();
 		args.add( getClangScanBuildPath() );
+		
 		args.add( "-k" ); // keep going on failure
 		args.add( "-v" ); // verbose
 		args.add( "-v" ); // even more verbose
+		
 		args.add( "-o" ); // output folder
 		args.add( "" + clangOutputFolder.getRemote().replaceAll( " ", "/ " ) + "" );
+		
+		String additionalArgs = getAdditionalScanBuildArguments();
+		if( isNotBlank( additionalArgs ) ){
+			// This is a hack.  I can't call the standard ArgumentListBuilder.add() method because it checks for spaces with-in
+			// the arg and quotes the arg if a space exists.  Since user's can pass commands like
+			// '--use-cc=`which clang`' or multiple commands...we cannot allow the quotes to be 
+			// inserted when spaces exist.  The ArgumentListBuilder.addTokenized() splits the arg on spaces and adds each piece 
+			// which ends up reinserting the spaces when the command is assembled.
+			args.addTokenized( additionalArgs );
+		}
 		
 		args.add( "xcodebuild" );
 		
@@ -145,6 +159,14 @@ public class ScanBuildCommand implements Command{
 
 	public void setScheme(String scheme) {
 		this.scheme = scheme;
+	}
+
+	public String getAdditionalScanBuildArguments() {
+		return additionalScanBuildArguments;
+	}
+
+	public void setAdditionalScanBuildArguments(String additionalScanBuildArguments) {
+		this.additionalScanBuildArguments = additionalScanBuildArguments;
 	}
 
 }

@@ -4,13 +4,17 @@ import hudson.FilePath;
 import hudson.model.Action;
 import hudson.model.ModelObject;
 import hudson.model.AbstractBuild;
+import hudson.util.FormValidation;
 
 import java.io.IOException;
 import java.util.regex.Pattern;
 
+import javax.servlet.ServletException;
+
 import jenkins.plugins.clangscanbuild.ClangScanBuildUtils;
 import jenkins.plugins.clangscanbuild.history.ClangScanBuildBugSummary;
 
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerProxy;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -119,8 +123,6 @@ public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 	public Object getTarget(){
 		return this;
 	}
-	
-	
 	
 	/**
 	 * This method is used to serve up report HTML files from the hidden build folder.  It essentially exposes

@@ -40,7 +40,7 @@ public class ScanBuildCommandTest{
 		command.setTarget( "myTarget" );
 		command.setTargetSdk( "myTargetSdk" );
 		command.setWorkspace( "myWorkspace" );
-		
+
 		String actual = buildCommandAndReturn( command );
 		
 		String expected = "/ScanBuild -k -v -v -o OutputFolder xcodebuild -workspace myWorkspace -scheme myScheme -configuration myConfig -sdk myTargetSdk clean build";
@@ -76,6 +76,47 @@ public class ScanBuildCommandTest{
 		EasyMock.verify( context );
 		
 		return argumentListCapture.getValue().toStringWithQuote();
+	}
+	
+	@Test
+	public void xcode4WorkspaceSetWithSingleScanBuildArgument() throws Exception{
+		// XCode 4 workspace/scheme should override unnecessary target
+		ScanBuildCommand command = new ScanBuildCommand();
+		command.setClangOutputFolder( new FilePath( new File( "OutputFolder" ) ) );
+		command.setClangScanBuildPath( "/ScanBuild" );
+		command.setConfig( "myConfig" );
+		command.setProjectDirectory( new FilePath( new File( "/ProjectDir" ) ) );
+		command.setScheme( "myScheme" );
+		command.setTarget( "myTarget" );
+		command.setTargetSdk( "myTargetSdk" );
+		command.setWorkspace( "myWorkspace" );
+		command.setAdditionalScanBuildArguments( "--use-cc=`which clang`" );
+
+		String actual = buildCommandAndReturn( command );
+		
+		// Jenkins core quotes this due to the space in between 'which' and 'clang' .  Not sure if this is OK or not... :(
+		String expected = "/ScanBuild -k -v -v -o OutputFolder --use-cc=`which clang` xcodebuild -workspace myWorkspace -scheme myScheme -configuration myConfig -sdk myTargetSdk clean build";
+		Assert.assertEquals( expected, actual );
+	}
+	
+	@Test
+	public void xcode4WorkspaceSetWithMultipleScanBuildArguments() throws Exception{
+		// XCode 4 workspace/scheme should override unnecessary target
+		ScanBuildCommand command = new ScanBuildCommand();
+		command.setClangOutputFolder( new FilePath( new File( "OutputFolder" ) ) );
+		command.setClangScanBuildPath( "/ScanBuild" );
+		command.setConfig( "myConfig" );
+		command.setProjectDirectory( new FilePath( new File( "/ProjectDir" ) ) );
+		command.setScheme( "myScheme" );
+		command.setTarget( "myTarget" );
+		command.setTargetSdk( "myTargetSdk" );
+		command.setWorkspace( "myWorkspace" );
+		command.setAdditionalScanBuildArguments( "-h -x somevalue" );
+
+		String actual = buildCommandAndReturn( command );
+		
+		String expected = "/ScanBuild -k -v -v -o OutputFolder -h -x somevalue xcodebuild -workspace myWorkspace -scheme myScheme -configuration myConfig -sdk myTargetSdk clean build";
+		Assert.assertEquals( expected, actual );
 	}
 	
 }

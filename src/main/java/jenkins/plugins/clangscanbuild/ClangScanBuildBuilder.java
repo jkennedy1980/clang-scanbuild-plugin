@@ -1,5 +1,9 @@
 package jenkins.plugins.clangscanbuild;
 
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -7,10 +11,12 @@ import hudson.Util;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.tasks.Builder;
+import hudson.util.FormValidation;
 import jenkins.plugins.clangscanbuild.commands.BuildContextImpl;
 import jenkins.plugins.clangscanbuild.commands.ScanBuildCommand;
 
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 /**
  * This builder provides a new build step for freestyle jobs.  Users can 
@@ -35,6 +41,7 @@ public class ClangScanBuildBuilder extends Builder{
     private String xcodeProjectSubPath;
     private String workspace;
     private String scheme;
+    private String scanbuildargs;
 
     @DataBoundConstructor
     public ClangScanBuildBuilder( 
@@ -44,7 +51,8 @@ public class ClangScanBuildBuilder extends Builder{
     		String clangInstallationName,
     		String xcodeProjectSubPath,
     		String workspace,
-    		String scheme ){
+    		String scheme,
+    		String scanbuildargs ){
     	
         this.target = Util.fixEmptyAndTrim( target );
         this.targetSdk = Util.fixEmptyAndTrim( targetSdk );
@@ -53,6 +61,7 @@ public class ClangScanBuildBuilder extends Builder{
         this.xcodeProjectSubPath = Util.fixEmptyAndTrim( xcodeProjectSubPath );
         this.workspace = Util.fixEmptyAndTrim( workspace );
         this.scheme = Util.fixEmptyAndTrim( scheme );
+        this.scanbuildargs = Util.fixEmptyAndTrim( scanbuildargs );
     }
 
     public String getClangInstallationName(){
@@ -79,6 +88,10 @@ public class ClangScanBuildBuilder extends Builder{
 		return scheme;
 	}
 	
+	public String getScanbuildargs(){
+		return scanbuildargs;
+	}
+	
 	/**
 	 * Removing slashes here in case the user adds a starting slash to the path.
 	 */
@@ -89,7 +102,7 @@ public class ClangScanBuildBuilder extends Builder{
 		}
 		return xcodeProjectSubPath;
 	}
-
+	
 	/**
 	 * This method is invoked when a job is actually executed.  It is the magic method.
 	 * @return boolean - if 'false', build will be aborted
@@ -109,6 +122,7 @@ public class ClangScanBuildBuilder extends Builder{
 		xcodebuild.setTarget( getTarget() );
 		xcodebuild.setTargetSdk( getTargetSdk() );
 		xcodebuild.setConfig( getConfig() );
+		xcodebuild.setAdditionalScanBuildArguments( getScanbuildargs() );
 		xcodebuild.setClangOutputFolder( new FilePath( build.getWorkspace(), ClangScanBuildUtils.REPORT_OUTPUT_FOLDERNAME) );
 		xcodebuild.setWorkspace( getWorkspace() );
 		xcodebuild.setScheme( getScheme() );
