@@ -37,6 +37,10 @@
   		<f:entry title="Additional scan-build arguments" field="scanbuildargs">
     		<f:textbox default="" />
   		</f:entry>
+
+                <f:entry title="Additional xcode build arguments" field="xcodebuildargs">
+    		<f:textbox default="" />
+  		</f:entry>
   		
 	</f:advanced>
   	
