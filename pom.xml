@@ -5,7 +5,7 @@
   <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.403</version>
+        <version>1.480</version>
   </parent>
 
   <groupId>jenkins.plugins.clangscanbuild</groupId>
