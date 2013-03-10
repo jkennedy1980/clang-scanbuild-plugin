@@ -41,6 +41,7 @@ public class ClangScanBuildBuilder extends Builder{
     private String workspace;
     private String scheme;
     private String scanbuildargs;
+    private String xcodebuildargs;
 
     @DataBoundConstructor
     public ClangScanBuildBuilder( 
@@ -51,7 +52,8 @@ public class ClangScanBuildBuilder extends Builder{
     		String xcodeProjectSubPath,
     		String workspace,
     		String scheme,
-    		String scanbuildargs ){
+    		String scanbuildargs,
+                String xcodebuildargs){
     	
         this.target = Util.fixEmptyAndTrim( target );
         this.targetSdk = Util.fixEmptyAndTrim( targetSdk );
@@ -61,6 +63,7 @@ public class ClangScanBuildBuilder extends Builder{
         this.workspace = Util.fixEmptyAndTrim( workspace );
         this.scheme = Util.fixEmptyAndTrim( scheme );
         this.scanbuildargs = Util.fixEmptyAndTrim( scanbuildargs );
+        this.xcodebuildargs = Util.fixEmptyAndTrim( xcodebuildargs );
     }
 
     public String getClangInstallationName(){
@@ -90,7 +93,11 @@ public class ClangScanBuildBuilder extends Builder{
 	public String getScanbuildargs(){
 		return scanbuildargs;
 	}
-	
+
+        public String getXcodebuildargs(){
+		return xcodebuildargs;
+	}
+
 	/**
 	 * Removing slashes here in case the user adds a starting slash to the path.
 	 */
@@ -127,6 +134,7 @@ public class ClangScanBuildBuilder extends Builder{
 		xcodebuild.setTargetSdk( getTargetSdk() );
 		xcodebuild.setConfig( getConfig() );
 		xcodebuild.setAdditionalScanBuildArguments( getScanbuildargs() );
+		xcodebuild.setAdditionalXcodeBuildArguments( getXcodebuildargs() );
 		xcodebuild.setClangOutputFolder( new FilePath( build.getWorkspace(), ClangScanBuildUtils.REPORT_OUTPUT_FOLDERNAME) );
 		xcodebuild.setWorkspace( getWorkspace() );
 		xcodebuild.setScheme( getScheme() );
