@@ -2,13 +2,17 @@
 	
 	<t:summary icon="/plugin/clang-scanbuild-plugin/icons/scanbuild-48x48.png">
 
-	    <j:if test="${it.buildUnstableDueToExceededThreshold() == true}">
-	    	${it.getBugCount()} bugs found.  Threshold of ${it.getUnstableBugThreshhold()} exceeded.  <b>BUILD UNSTABLE</b>
-	    </j:if>
-	    
-	    <j:if test="${it.buildUnstableDueToExceededThreshold() == false}">
-	    	${it.getBugCount()} bugs found.
-	    </j:if>
+		<j:choose>
+			<j:when test="${it.buildFailedDueToExceededThreshold() == true}">
+				${it.getBugCount()} bugs found.  Threshold of ${it.getFailBugThreshhold()} exceeded.  <b>BUILD FAILED</b>
+			</j:when>
+			<j:when test="${it.buildUnstableDueToExceededThreshold() == true}">
+				${it.getBugCount()} bugs found.  Threshold of ${it.getUnstableBugThreshhold()} exceeded.  <b>BUILD UNSTABLE</b>
+			</j:when>
+			<j:otherwise>
+				${it.getBugCount()} bugs found.
+			</j:otherwise>
+		</j:choose>
 	    
 	    <br/>
 	    <a href="${it.getUrlName()}">details</a>

@@ -44,15 +44,15 @@ public class ClangScanBuildHistoryGathererImplTest extends HudsonTestCase{
 	
 	private class TestClangScanBuildAction extends ClangScanBuildAction{
 
-		public TestClangScanBuildAction( AbstractBuild<?,?> build, int bugCount, int unstableThreshold ){
-			super( build, bugCount, true, unstableThreshold, null );
+		public TestClangScanBuildAction( AbstractBuild<?,?> build, int bugCount, int unstableThreshold, int failThreshold ){
+			super( build, bugCount, true, unstableThreshold, true, failThreshold, null );
 		}
 
 	}
 	
 	private FreeStyleBuild performBuildWithClangAction( FreeStyleProject project, int bugCount ) throws Exception {
 		FreeStyleBuild build = project.scheduleBuild2(0).get();
-		build.addAction( new TestClangScanBuildAction( build, bugCount, 0 ) );
+		build.addAction( new TestClangScanBuildAction( build, bugCount, 0, 0 ) );
 		return build;
 	}
 	

@@ -30,15 +30,18 @@ public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 
 	public static final String BUILD_ACTION_URL_NAME = "clangScanBuildBugs";
 	private int unstableBugThreshold;
+	private int failBugThreshold;
 	private FilePath bugSummaryXML;
 	private boolean markBuildUnstable;
+	private boolean markBuildFailed;
 	private int bugCount;
 	private AbstractBuild<?,?> build;
 	
 	private Pattern APPROVED_REPORT_REQUEST_PATTERN = Pattern.compile( "[^.\\\\/]*\\.html" );
 	
-	public ClangScanBuildAction( AbstractBuild<?,?> build, int bugCount, boolean markBuildUnstable, int unstableBugThreshold, FilePath bugSummaryXML ){
+	public ClangScanBuildAction( AbstractBuild<?,?> build, int bugCount, boolean markBuildUnstable, int unstableBugThreshold, boolean markBuildFailed, int failBugThreshold, FilePath bugSummaryXML ){
 		this.unstableBugThreshold = unstableBugThreshold;
+		this.failBugThreshold = failBugThreshold;
 		this.bugCount = bugCount;
 		this.bugSummaryXML = bugSummaryXML;
 		this.markBuildUnstable = markBuildUnstable;
@@ -52,6 +55,15 @@ public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 	
 	public int getUnstableBugThreshhold(){
 		return unstableBugThreshold;
+	}
+
+	public boolean buildFailedDueToExceededThreshold(){
+		if( !markBuildFailed ) return false;
+		return getBugCount() > failBugThreshold;
+	}
+
+	public int getFailBugThreshhold(){
+		return failBugThreshold;
 	}
 
 	/**

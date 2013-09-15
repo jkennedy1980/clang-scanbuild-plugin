@@ -40,15 +40,21 @@ public class ClangScanBuildPublisher extends Recorder{
 
 	private int unstableBugThreshold;
 	private boolean markBuildUnstableWhenThresholdIsExceeded;
+	private int failBugThreshold;
+	private boolean markBuildFailedWhenThresholdIsExceeded;
 
 	public ClangScanBuildPublisher( 
 			boolean markBuildUnstableWhenThresholdIsExceeded, 
-			int unstableBugThreshold
+			int unstableBugThreshold,
+			boolean markBuildFailedWhenThresholdIsExceeded,
+			int failBugThreshold
 			){
 		
 		super();
 		this.markBuildUnstableWhenThresholdIsExceeded = markBuildUnstableWhenThresholdIsExceeded;
 		this.unstableBugThreshold = unstableBugThreshold;
+		this.markBuildFailedWhenThresholdIsExceeded = markBuildFailedWhenThresholdIsExceeded;
+		this.failBugThreshold = failBugThreshold;
 	}
 
 	public int getUnstableBugThreshold() {
@@ -61,6 +67,18 @@ public class ClangScanBuildPublisher extends Recorder{
 
 	public void setUnstableBugThreshold(int unstableBugThreshold) {
 		this.unstableBugThreshold = unstableBugThreshold;
+	}
+
+	public int getFailBugThreshold() {
+		return failBugThreshold;
+	}
+
+	public boolean isMarkBuildFailedWhenThresholdIsExceeded(){
+		return markBuildFailedWhenThresholdIsExceeded;
+	}
+
+	public void setFailedBugThreshold(int failBugThreshold) {
+		this.failBugThreshold = failBugThreshold;
 	}
 
 	@Override
@@ -115,8 +133,12 @@ public class ClangScanBuildPublisher extends Recorder{
 		final ClangScanBuildAction action = new ClangScanBuildAction( build, newBugSummary.getBugCount(), markBuildUnstableWhenThresholdIsExceeded, unstableBugThreshold, bugSummaryXMLFile );
         build.getActions().add( action );
 
-        // this checks if the build should be marked unstable due to exceeding the threshold in bugs
-        if( action.buildUnstableDueToExceededThreshold() ){
+        // this checks if the build should be marked failed or unstable due to exceeding the bug thresholds
+        if( action.buildFailedDueToExceededThreshold() ){
+            listener.getLogger().println( "Clang scan-build fail threshhold exceeded." );
+            build.setResult( Result.FAILURE );
+        }
+        else if( action.buildUnstableDueToExceededThreshold() ){
             listener.getLogger().println( "Clang scan-build unstable threshhold exceeded." );
             build.setResult( Result.UNSTABLE );
         }

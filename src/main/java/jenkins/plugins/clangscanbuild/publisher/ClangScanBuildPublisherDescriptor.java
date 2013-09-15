@@ -22,14 +22,22 @@ public class ClangScanBuildPublisherDescriptor extends BuildStepDescriptor<Publi
 
 		boolean markBuildUnstable = false;
 		int unstableBugThreshold = 0;
+		boolean markBuildFailed = false;
+		int failBugThreshold = 0;
 		
 		JSONObject unstableWhenThresholdExceeded = json.optJSONObject( "unstableWhenThresholdExceeded" );
 		if( unstableWhenThresholdExceeded != null ){
 			markBuildUnstable = true;
 			unstableBugThreshold = unstableWhenThresholdExceeded.getInt( "unstableBugThreshold" );
 		}
+
+		JSONObject failWhenThresholdExceeded = json.optJSONObject( "failWhenThresholdExceeded" );
+		if( failWhenThresholdExceeded != null ){
+			markBuildFailed = true;
+			failBugThreshold = failWhenThresholdExceeded.getInt( "failBugThreshold" );
+		}
 		
-		return new ClangScanBuildPublisher(  markBuildUnstable, unstableBugThreshold );
+		return new ClangScanBuildPublisher( markBuildUnstable, unstableBugThreshold, markBuildFailed, failBugThreshold );
 	}
 	
 	@Override
