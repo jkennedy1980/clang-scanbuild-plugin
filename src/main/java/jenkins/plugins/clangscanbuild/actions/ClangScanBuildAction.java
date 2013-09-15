@@ -50,7 +50,7 @@ public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 		return getBugCount() > unstableBugThreshold;
 	}
 	
-	public int getBugThreshhold(){
+	public int getUnstableBugThreshhold(){
 		return unstableBugThreshold;
 	}
 
