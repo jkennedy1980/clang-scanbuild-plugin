@@ -29,33 +29,45 @@ import org.kohsuke.stapler.StaplerResponse;
 public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 
 	public static final String BUILD_ACTION_URL_NAME = "clangScanBuildBugs";
-	private int bugThreshold;
+	private int unstableBugThreshold;
+	private int failBugThreshold;
 	private FilePath bugSummaryXML;
 	private boolean markBuildUnstable;
+	private boolean markBuildFailed;
 	private int bugCount;
 	private AbstractBuild<?,?> build;
 	
 	private Pattern APPROVED_REPORT_REQUEST_PATTERN = Pattern.compile( "[^.\\\\/]*\\.html" );
 	
-	public ClangScanBuildAction( AbstractBuild<?,?> build, int bugCount, boolean markBuildUnstable, int bugThreshold, FilePath bugSummaryXML ){
-		this.bugThreshold = bugThreshold;
+	public ClangScanBuildAction( AbstractBuild<?,?> build, int bugCount, boolean markBuildUnstable, int unstableBugThreshold, boolean markBuildFailed, int failBugThreshold, FilePath bugSummaryXML ){
+		this.unstableBugThreshold = unstableBugThreshold;
+		this.failBugThreshold = failBugThreshold;
 		this.bugCount = bugCount;
 		this.bugSummaryXML = bugSummaryXML;
 		this.markBuildUnstable = markBuildUnstable;
 		this.build = build;
 	}
 	
-	public boolean buildFailedDueToExceededThreshold(){
+	public boolean buildUnstableDueToExceededThreshold(){
 		if( !markBuildUnstable ) return false;
-		return getBugCount() > bugThreshold;
+		return getBugCount() > unstableBugThreshold;
 	}
 	
-	public int getBugThreshhold(){
-		return bugThreshold;
+	public int getUnstableBugThreshhold(){
+		return unstableBugThreshold;
 	}
-	
+
+	public boolean buildFailedDueToExceededThreshold(){
+		if( !markBuildFailed ) return false;
+		return getBugCount() > failBugThreshold;
+	}
+
+	public int getFailBugThreshhold(){
+		return failBugThreshold;
+	}
+
 	/**
-	 * The only thing stored in the actual builds in the bugCount and bugThreshold.  This was done in order to make the
+	 * The only thing stored in the actual builds is the bugCount, unstableBugThreshold, and failBugThreshold.  This was done in order to make the
 	 * build XML smaller to reduce load times.  The counts are need in order to render the trend charts.
 	 * 
 	 * This method actually loads the XML file that was generated at build time and placed alongside the clang output files
