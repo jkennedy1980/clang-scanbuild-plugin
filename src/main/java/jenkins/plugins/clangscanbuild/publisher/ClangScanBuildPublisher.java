@@ -133,7 +133,8 @@ public class ClangScanBuildPublisher extends Recorder{
 		final ClangScanBuildAction action = new ClangScanBuildAction( build, newBugSummary.getBugCount(), markBuildUnstableWhenThresholdIsExceeded, unstableBugThreshold, bugSummaryXMLFile );
         build.getActions().add( action );
 
-        // this checks if the build should be marked failed or unstable due to exceeding the bug thresholds
+        // This checks if the build should be marked failed or unstable due to exceeding the bug thresholds.
+        // Marking the build Failed takes priority over marking it unstable.
         if( action.buildFailedDueToExceededThreshold() ){
             listener.getLogger().println( "Clang scan-build fail threshhold exceeded." );
             build.setResult( Result.FAILURE );

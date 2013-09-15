@@ -67,7 +67,7 @@ public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 	}
 
 	/**
-	 * The only thing stored in the actual builds is the bugCount and unstableBugThreshold.  This was done in order to make the
+	 * The only thing stored in the actual builds is the bugCount, unstableBugThreshold, and failBugThreshold.  This was done in order to make the
 	 * build XML smaller to reduce load times.  The counts are need in order to render the trend charts.
 	 * 
 	 * This method actually loads the XML file that was generated at build time and placed alongside the clang output files
