@@ -44,8 +44,8 @@ public class ClangScanBuildHistoryGathererImplTest extends HudsonTestCase{
 	
 	private class TestClangScanBuildAction extends ClangScanBuildAction{
 
-		public TestClangScanBuildAction( AbstractBuild<?,?> build, int bugCount, int threshold ){
-			super( build, bugCount, true, threshold, null );
+		public TestClangScanBuildAction( AbstractBuild<?,?> build, int bugCount, int unstableThreshold ){
+			super( build, bugCount, true, unstableThreshold, null );
 		}
 
 	}

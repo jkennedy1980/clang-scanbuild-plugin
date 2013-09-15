@@ -2,9 +2,9 @@
 
    <f:nested>
      <table>
-	  	<f:optionalBlock name="failWhenThresholdExceeded" title="Mark build as unstable when threshold is exceeded?" checked="${instance.markBuildUnstableWhenThresholdIsExceeded}">
+	  	<f:optionalBlock name="unstableWhenThresholdExceeded" title="Mark build as unstable when threshold is exceeded?" checked="${instance.markBuildUnstableWhenThresholdIsExceeded}">
 	      
-		    <f:entry title="Clang bug threshold" field="bugThreshold">
+		    <f:entry title="Clang unstable bug threshold" field="unstableBugThreshold">
 		    		<f:textbox />
 		  	</f:entry>
 	      

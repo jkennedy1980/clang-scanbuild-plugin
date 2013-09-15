@@ -29,7 +29,7 @@ import org.kohsuke.stapler.StaplerResponse;
 public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 
 	public static final String BUILD_ACTION_URL_NAME = "clangScanBuildBugs";
-	private int bugThreshold;
+	private int unstableBugThreshold;
 	private FilePath bugSummaryXML;
 	private boolean markBuildUnstable;
 	private int bugCount;
@@ -37,25 +37,25 @@ public class ClangScanBuildAction implements Action, StaplerProxy, ModelObject{
 	
 	private Pattern APPROVED_REPORT_REQUEST_PATTERN = Pattern.compile( "[^.\\\\/]*\\.html" );
 	
-	public ClangScanBuildAction( AbstractBuild<?,?> build, int bugCount, boolean markBuildUnstable, int bugThreshold, FilePath bugSummaryXML ){
-		this.bugThreshold = bugThreshold;
+	public ClangScanBuildAction( AbstractBuild<?,?> build, int bugCount, boolean markBuildUnstable, int unstableBugThreshold, FilePath bugSummaryXML ){
+		this.unstableBugThreshold = unstableBugThreshold;
 		this.bugCount = bugCount;
 		this.bugSummaryXML = bugSummaryXML;
 		this.markBuildUnstable = markBuildUnstable;
 		this.build = build;
 	}
 	
-	public boolean buildFailedDueToExceededThreshold(){
+	public boolean buildUnstableDueToExceededThreshold(){
 		if( !markBuildUnstable ) return false;
-		return getBugCount() > bugThreshold;
+		return getBugCount() > unstableBugThreshold;
 	}
 	
 	public int getBugThreshhold(){
-		return bugThreshold;
+		return unstableBugThreshold;
 	}
-	
+
 	/**
-	 * The only thing stored in the actual builds in the bugCount and bugThreshold.  This was done in order to make the
+	 * The only thing stored in the actual builds is the bugCount and unstableBugThreshold.  This was done in order to make the
 	 * build XML smaller to reduce load times.  The counts are need in order to render the trend charts.
 	 * 
 	 * This method actually loads the XML file that was generated at build time and placed alongside the clang output files

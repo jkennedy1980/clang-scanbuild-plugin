@@ -22,7 +22,7 @@ public class ClangScanBuildPublisherTest extends HudsonTestCase{
 
 		ClangScanBuildPublisher publisherAfter = p.getPublishersList().get( ClangScanBuildPublisher.class );
 
-		assertEqualBeans( publisherBefore, publisherAfter, "bugThreshold,markBuildUnstableWhenThresholdIsExceeded" );
+		assertEqualBeans( publisherBefore, publisherAfter, "unstableBugThreshold,markBuildUnstableWhenThresholdIsExceeded" );
 	}
 	
 }
