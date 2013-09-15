@@ -38,29 +38,47 @@ public class ClangScanBuildPublisher extends Recorder{
 	private static final Pattern BUGFILE_PATTERN = Pattern.compile( "<!--\\sBUGFILE\\s(.*)\\s-->" );
 	private static final Pattern BUGCATEGORY_PATTERN = Pattern.compile( "<!--\\sBUGCATEGORY\\s(.*)\\s-->" );
 
-	private int bugThreshold;
+	private int unstableBugThreshold;
 	private boolean markBuildUnstableWhenThresholdIsExceeded;
+	private int failBugThreshold;
+	private boolean markBuildFailedWhenThresholdIsExceeded;
 
 	public ClangScanBuildPublisher( 
 			boolean markBuildUnstableWhenThresholdIsExceeded, 
-			int bugThreshold
+			int unstableBugThreshold,
+			boolean markBuildFailedWhenThresholdIsExceeded,
+			int failBugThreshold
 			){
 		
 		super();
 		this.markBuildUnstableWhenThresholdIsExceeded = markBuildUnstableWhenThresholdIsExceeded;
-		this.bugThreshold = bugThreshold;
+		this.unstableBugThreshold = unstableBugThreshold;
+		this.markBuildFailedWhenThresholdIsExceeded = markBuildFailedWhenThresholdIsExceeded;
+		this.failBugThreshold = failBugThreshold;
 	}
 
-	public int getBugThreshold() {
-		return bugThreshold;
+	public int getUnstableBugThreshold() {
+		return unstableBugThreshold;
 	}
 	
 	public boolean isMarkBuildUnstableWhenThresholdIsExceeded(){
 		return markBuildUnstableWhenThresholdIsExceeded;
 	}
 
-	public void setBugThreshold(int bugThreshold) {
-		this.bugThreshold = bugThreshold;
+	public void setUnstableBugThreshold(int unstableBugThreshold) {
+		this.unstableBugThreshold = unstableBugThreshold;
+	}
+
+	public int getFailBugThreshold() {
+		return failBugThreshold;
+	}
+
+	public boolean isMarkBuildFailedWhenThresholdIsExceeded(){
+		return markBuildFailedWhenThresholdIsExceeded;
+	}
+
+	public void setFailedBugThreshold(int failBugThreshold) {
+		this.failBugThreshold = failBugThreshold;
 	}
 
 	@Override
@@ -112,12 +130,17 @@ public class ClangScanBuildPublisher extends Recorder{
 		bugSummaryXMLFile.write( bugSummaryXML, "UTF-8" );
 		
 		// this adds a build actions which records the bug count into the build results.  This count is used to generate the trend charts
-		final ClangScanBuildAction action = new ClangScanBuildAction( build, newBugSummary.getBugCount(), markBuildUnstableWhenThresholdIsExceeded, bugThreshold, bugSummaryXMLFile );
+		final ClangScanBuildAction action = new ClangScanBuildAction( build, newBugSummary.getBugCount(), markBuildUnstableWhenThresholdIsExceeded, unstableBugThreshold, bugSummaryXMLFile );
         build.getActions().add( action );
 
-        // this checks if the build should be failed due to an increase in bugs
+        // This checks if the build should be marked failed or unstable due to exceeding the bug thresholds.
+        // Marking the build Failed takes priority over marking it unstable.
         if( action.buildFailedDueToExceededThreshold() ){
-        	listener.getLogger().println( "Clang scan-build threshhold exceeded." );
+            listener.getLogger().println( "Clang scan-build fail threshhold exceeded." );
+            build.setResult( Result.FAILURE );
+        }
+        else if( action.buildUnstableDueToExceededThreshold() ){
+            listener.getLogger().println( "Clang scan-build unstable threshhold exceeded." );
             build.setResult( Result.UNSTABLE );
         }
 

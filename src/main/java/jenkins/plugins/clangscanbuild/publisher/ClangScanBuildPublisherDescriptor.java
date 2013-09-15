@@ -21,15 +21,23 @@ public class ClangScanBuildPublisherDescriptor extends BuildStepDescriptor<Publi
 	public Publisher newInstance(StaplerRequest arg0, JSONObject json ) throws hudson.model.Descriptor.FormException {
 
 		boolean markBuildUnstable = false;
-		int bugThreshold = 0;
+		int unstableBugThreshold = 0;
+		boolean markBuildFailed = false;
+		int failBugThreshold = 0;
 		
+		JSONObject unstableWhenThresholdExceeded = json.optJSONObject( "unstableWhenThresholdExceeded" );
+		if( unstableWhenThresholdExceeded != null ){
+			markBuildUnstable = true;
+			unstableBugThreshold = unstableWhenThresholdExceeded.getInt( "unstableBugThreshold" );
+		}
+
 		JSONObject failWhenThresholdExceeded = json.optJSONObject( "failWhenThresholdExceeded" );
 		if( failWhenThresholdExceeded != null ){
-			markBuildUnstable = true;
-			bugThreshold = failWhenThresholdExceeded.getInt( "bugThreshold" );
+			markBuildFailed = true;
+			failBugThreshold = failWhenThresholdExceeded.getInt( "failBugThreshold" );
 		}
 		
-		return new ClangScanBuildPublisher(  markBuildUnstable, bugThreshold );
+		return new ClangScanBuildPublisher( markBuildUnstable, unstableBugThreshold, markBuildFailed, failBugThreshold );
 	}
 	
 	@Override
